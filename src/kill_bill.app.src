@@ -1,0 +1,18 @@
+{application, kill_bill,
+[
+{description, "Kill Bill - Web Application Server"},
+{vsn, "1.0"},
+{modules, [kill_bill_app, kill_bill_sup, kill_bill
+          ]},
+{registered, [  kill_bill, 
+				kb_webapp_sup, 
+				kb_template_sup
+             ]},
+{applications, [kernel, 
+                stdlib,
+                cowboy
+               ]},
+{mod, {kill_bill_app, []}},
+{start_phases, []}
+]
+}.

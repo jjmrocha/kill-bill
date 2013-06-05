@@ -1,0 +1,28 @@
+-define(PROTOCOL_HTTP, http).
+-define(PROTOCOL_HTTPS, https).
+
+-record(template, {top_page="index.html", 
+					dir="./priv", 
+					extension=".html",
+					message_file="message.txt", 
+					message_file_dir="./priv"}
+				).
+					
+-record(static, {context="/", 
+					dir="./priv"}
+				).
+					
+-record(ssl, {cacertfile, 
+				certfile, 
+				keyfile}
+			). 
+
+-record(web_app, {host='_',
+					protocol=?PROTOCOL_HTTP,
+					port=8080,
+					ssl=none,
+					acceptor_number=100,
+					template=none,
+					static=none,
+					websocket=none}
+				).
