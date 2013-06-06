@@ -1,4 +1,4 @@
--module(kb_template).
+-module(kb_resource).
 
 -behaviour(gen_server).
 
@@ -9,26 +9,31 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([start_link/1]).
+-export([start_link/1, get_resource/2, add_locale/3]).
 
 start_link(Args) ->
 	gen_server:start_link(?MODULE, Args, []).
 
+get_resource(Server, Locales) ->
+	gen_server:call(Server, {resource, Locales}).
+
+add_locale(Server, Locale, Resource) ->
+	gen_server:cast(Server, {add_locale, Locale, Resource}).
+
 %% ====================================================================
 %% Behavioural functions 
 %% ====================================================================
--record(state, {config, templates, messages, final}).
 
 init([Config]) ->
-    {ok, #state{config=Config, templates=ets:new(templates), messages=ets:new(messages), final=ets:new(final)}}.
+    {ok, load_resources(Config, dict:new())}.
 
-handle_call({get_html, Path, Locales}, From, State) ->
-	run(Path, Locales, From, State),
+handle_call({resource, Locales}, From, State) ->
+	run(Locales, From, State),
     {noreply, State}.
 
-handle_cast(Msg, State) ->
-	error_logger:info_msg("handle_cast(~p)\n", [Msg]),
-    {noreply, State}.
+handle_cast({add_locale, Locale, Resource}, State) ->
+	Store = dict:store(Locale, Resource, State),
+    {noreply, Store}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
@@ -45,15 +50,15 @@ code_change(_OldVsn, State, _Extra) ->
 %% Internal functions
 %% ====================================================================
 
-run(<<"/">>, Locales, From, State=#state{config=Config}) ->
-	TopPage = list_to_binary(Config#template.top_page),
-	run(TopPage, Locales, From, State);
-run(Path, Locales, From, State) ->
+load_resources(_Config, _Store) -> todo.
+
+run(Locales, From, Store) ->
+	Server = self(),
 	Fun = fun() ->
-		Reply = find(Path, Locales, State),
+		Reply = find(Server, Locales, Store),
 		gen_server:reply(From, Reply)
 	end,
 	spawn(Fun).
 
-find(_Path, _Locales, _State) -> todo.
+find(_Server, _Locales, _Store) -> todo.
 				  
