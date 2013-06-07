@@ -1,15 +1,15 @@
 -module(kb_cowboy_toppage).
 
+-include("kill_bill.hlr").
+
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, [TemplateServer]) ->
-	{ok, Req, TemplateServer}.
+init(_Transport, Req, [ResourceServer, TemplateConfig]) ->
+	{ok, Req, {ResourceServer, TemplateConfig}}.
 
-handle(Req, TemplateServer) ->
-	Locales = kb_http:get_accept_languages(Req),
-	Html = gen_server:call(TemplateServer, {get_html, <<"/">>, Locales}),
-	{ok, Req2} = cowboy_req:reply(200, [{<<"content-type">>, <<"text/html">>}],	Html, Req),
-	{ok, Req2, TemplateServer}.
+handle(Req, {ResourceServer, TemplateConfig}) ->
+	Req2 = kb_template_util:execute(TemplateConfig#template.top_page, TemplateConfig, ResourceServer, Req),
+	{ok, Req2, {ResourceServer, TemplateConfig}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.

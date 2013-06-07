@@ -105,17 +105,22 @@ code_change(_OldVsn, State, _Extra) ->
 %% ====================================================================
 
 get_web_app_config(WebApp, App) ->
-	Template = add_template(WebApp#web_app.template, []),
+	ResourceServer = get_resource_server(WebApp#web_app.resource),
+	Template = add_template(WebApp#web_app.template, ResourceServer, []),
 	WebSocket = add_websocket(WebApp#web_app.websocket, App, Template) ,
 	Static = add_static(WebApp#web_app.static, WebSocket),
 	Static.
 			
-add_template(none, Config) -> Config;
-add_template(Template, Config) ->
-	{ok, TemplateServer} = kb_template_sup:start_template_server(Template),
+get_resource_server(none) -> none;
+get_resource_server(Resource) ->
+	{ok, Server} = kb_resource_sup:start_resource_server(Resource),
+	Server.
+  
+add_template(none, _ResourceServer, Config) -> Config;
+add_template(Template, ResourceServer, Config) ->
 	lists:append([
-		{"/", kb_cowboy_toppage, [TemplateServer]},
-		{get_template_match(Template), kb_cowboy_template, [TemplateServer]}
+		{"/", kb_cowboy_toppage, [ResourceServer,Template]},
+		{get_template_match(Template), kb_cowboy_template, [ResourceServer,Template]}
 	], Config).
 
 add_websocket(none, _App, Config) -> Config;

@@ -10,8 +10,8 @@
 start_link() ->
 	supervisor:start_link(?SERVER, ?MODULE, []).
 
-start_resource_server(TemplateConfig) ->
-	supervisor:start_child(?MODULE, [TemplateConfig]).
+start_resource_server(ResourceConfig) ->
+	supervisor:start_child(?MODULE, [ResourceConfig]).
 
 init([]) ->
 	process_flag(trap_exit, true),
