@@ -2,11 +2,12 @@
 -define(PROTOCOL_HTTPS, https).
 
 -record(template, {top_page="index.html", 
-					dir="./priv", 
-					extension=".html",
-					message_file="message.txt", 
-					message_file_dir="./priv"}
+					extension=".html"}
 				).
+				
+-record(resource, {message_file="message.txt", 
+					message_file_dir="./resource"}
+				).				
 					
 -record(static, {context="/", 
 					dir="./priv"}
@@ -23,6 +24,7 @@
 					ssl=none,
 					acceptor_number=100,
 					template=none,
+					resource=none,
 					static=none,
 					websocket=none}
 				).
