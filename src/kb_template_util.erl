@@ -1,5 +1,7 @@
 -module(kb_template_util).
 
+-include("kill_bill.hlr").
+
 %% ====================================================================
 %% API functions
 %% ====================================================================
@@ -24,7 +26,13 @@ execute(Path, TemplateConfig, ResourceServer, Req) ->
 %% Internal functions
 %% ====================================================================
 
-get_dtl(_Path, _TemplateConfig) -> todo.
+get_dtl(Path, TemplateConfig) -> 
+	NoExt = kb_util:remove_if_ends_with(Path, TemplateConfig#template.extension),
+	NoPath = case string:rstr(NoExt, "/") of
+		0 -> NoExt;
+		Pos -> string:substr(NoExt, Pos + 1)
+	end,
+	list_to_atom(NoPath ++ "_dtl").
 
 get_dict(none, _Req) -> none;
 get_dict(ResourceServer, Req) ->
