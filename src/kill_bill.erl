@@ -42,22 +42,25 @@ init([]) ->
 handle_call({deploy, AppName, Callback, WebApp}, _From, State) ->
 	Reply = case dict:find(AppName, State) of
 		error ->
+			Server = WebApp#web_app.server,
+						
 		  	{ok, App} = kb_webapp_sup:start_webapp(Callback),
 			NState = dict:store(AppName, App, State),
-			Dispatch = cowboy_router:compile([{WebApp#web_app.host, [get_web_app_config(WebApp, App)]}]),
+			Config = get_web_app_config(WebApp, App),
+			Dispatch = cowboy_router:compile([{Server#server_config.host, [Config]}]),
 			
-			NbAcceptors = WebApp#web_app.acceptor_number,
-			TransOpts = get_transport_config(WebApp),
+			NbAcceptors = Server#server_config.acceptor_number,
+			TransOpts = get_transport_config(Server),
 			ProtoOpts = [{env, [{dispatch, Dispatch}]}],
 			
-			case WebApp#web_app.protocol of
+			case Server#server_config.protocol of
 				?PROTOCOL_HTTP -> 
 					{ok, _} = cowboy:start_http(AppName, NbAcceptors, TransOpts, ProtoOpts);
 				?PROTOCOL_HTTPS -> 
 					{ok, _} = cowboy:start_https(AppName, NbAcceptors, TransOpts, ProtoOpts)
 			end,
 			
-			error_logger:info_msg("WebApp ~p listening on port [~p]\n", [AppName, WebApp#web_app.port]),
+			error_logger:info_msg("WebApp ~p listening on port [~p], with Config: [~p]\n", [AppName, Server#server_config.port, Config]),
 			ok;
 		{ok, _App} ->
 			error_logger:error_msg("Duplicated name ~p\n", [AppName]),
@@ -107,7 +110,8 @@ code_change(_OldVsn, State, _Extra) ->
 get_web_app_config(WebApp, App) ->
 	ResourceServer = get_resource_server(WebApp#web_app.resource),
 	Template = add_template(WebApp#web_app.template, ResourceServer, []),
-	WebSocket = add_websocket(WebApp#web_app.websocket, App, Template) ,
+	Action = add_action(WebApp#web_app.action, ResourceServer, Template),
+	WebSocket = add_websocket(WebApp#web_app.websocket, App, Action) ,
 	Static = add_static(WebApp#web_app.static, WebSocket),
 	Static.
 			
@@ -119,8 +123,14 @@ get_resource_server(Resource) ->
 add_template(none, _ResourceServer, Config) -> Config;
 add_template(Template, ResourceServer, Config) ->
 	lists:append([
-		{"/", kb_cowboy_toppage, [ResourceServer,Template]},
-		{get_template_match(Template), kb_cowboy_template, [ResourceServer,Template]}
+		{"/", kb_cowboy_toppage, [ResourceServer, Template]},
+		{get_template_match(Template), kb_cowboy_template, [ResourceServer, Template]}
+	], Config).
+
+add_action(none, _ResourceServer, Config) -> Config;
+add_action(Action, ResourceServer, Config) ->
+	lists:append([
+		{get_action_match(Action), kb_cowboy_action, [ResourceServer, Action]}
 	], Config).
 
 add_websocket(none, _App, Config) -> Config;
@@ -138,26 +148,29 @@ add_static(Static, Config) ->
 		]}
 	], Config).
 
+get_action_match(Action) ->
+	"/[...]" ++ Action#action_config.extension.
+
 get_template_match(Template) ->
-	"/[...]" ++ Template#template.extension.
+	"/[...]" ++ Template#template_config.extension.
 
 get_static_match(Static) ->
-	"/" ++ remove_slashs(Static#static.context) ++ "/[...]".
+	"/" ++ remove_slashs(Static#static_config.context) ++ "/[...]".
 
 get_static_dir(Static) ->
-	Static#static.dir.
+	Static#static_config.dir.
 
 remove_slashs(Path) ->
 	kb_util:remove_if_ends_with(kb_util:remove_if_starts_with(Path, "/"), "/").
 
-get_transport_config(WebApp) ->
-	lists:append([{port, WebApp#web_app.port}], get_ssl(WebApp#web_app.protocol, WebApp#web_app.ssl)).
+get_transport_config(Server) ->
+	lists:append([{port, Server#server_config.port}], get_ssl(Server#server_config.protocol, Server#server_config.ssl)).
 
 get_ssl(?PROTOCOL_HTTP, _Ssl) -> [];
 get_ssl(_Protocol, none) -> [];
 get_ssl(_Protocol, Ssl) -> 
 	[
-		{cacertfile, Ssl#ssl.cacertfile},
-		{certfile, Ssl#ssl.certfile},
-		{keyfile, Ssl#ssl.keyfile}
+		{cacertfile, Ssl#ssl_config.cacertfile},
+		{certfile, Ssl#ssl_config.certfile},
+		{keyfile, Ssl#ssl_config.keyfile}
 	].

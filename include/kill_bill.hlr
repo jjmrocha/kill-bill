@@ -1,30 +1,53 @@
 -define(PROTOCOL_HTTP, http).
 -define(PROTOCOL_HTTPS, https).
 
--record(template, {top_page="index.html", 
-					extension=".html"}
-				).
+-record(server_config, {
+				host = '_',
+				protocol = ?PROTOCOL_HTTP,
+				port = 8080,
+				ssl = none,
+				acceptor_number = 100
+			}
+		).
 				
--record(resource, {message_file="message.txt", 
-					message_file_dir="./resource"}
-				).				
-					
--record(static, {context="/", 
-					dir="./priv"}
-				).
-					
--record(ssl, {cacertfile, 
+-record(ssl_config, {
+				cacertfile, 
 				certfile, 
-				keyfile}
-			). 
+				keyfile
+			}
+		). 				
 
--record(web_app, {host='_',
-					protocol=?PROTOCOL_HTTP,
-					port=8080,
-					ssl=none,
-					acceptor_number=100,
-					template=none,
-					resource=none,
-					static=none,
-					websocket=none}
-				).
+-record(template_config, {
+				top_page = "index.html", 
+				extension = ".html"
+			}
+		).
+				
+-record(resource_config, {
+				base_name = "message",
+				file_extension = ".txt",  
+				file_dir = "./resource"
+			}
+		).				
+					
+-record(static_config, {
+				context = "/", 
+				dir = "./priv"
+			}
+		).
+		
+-record(action_config, { 
+				extension = ".action",
+				callback = none							
+			}
+		).		
+
+-record(web_app, {
+				server = #server_config{},
+				template = none,
+				resource = none,
+				action = none,
+				static = none,
+				websocket = none
+			}
+		).

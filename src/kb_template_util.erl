@@ -27,7 +27,7 @@ execute(Path, TemplateConfig, ResourceServer, Req) ->
 %% ====================================================================
 
 get_dtl(Path, TemplateConfig) -> 
-	NoExt = kb_util:remove_if_ends_with(Path, TemplateConfig#template.extension),
+	NoExt = kb_util:remove_if_ends_with(Path, TemplateConfig#template_config.extension),
 	NoPath = case string:rstr(NoExt, "/") of
 		0 -> NoExt;
 		Pos -> string:substr(NoExt, Pos + 1)
