@@ -2,8 +2,6 @@
 
 -behaviour(cowboy_websocket_handler).
 
--include("kill_bill.hlr").
-
 -export([init/3, websocket_init/3, websocket_handle/3, websocket_info/3, websocket_terminate/3]).
 
 init({_TransportName, _ProtocolName}, _Req, _Opts) ->

@@ -2,8 +2,6 @@
 
 -behaviour(gen_server).
 
--include("kill_bill.hlr").
-
 -define(ORIGIN_CLIENT, client).
 -define(ORIGIN_APP, app).
 
