@@ -24,8 +24,10 @@ init({_TransportName, _ProtocolName}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_TransportName, Req, [WebApp]) ->
-	kb_webapp:client_connect(WebApp),
-	{ok, Req, WebApp}.
+	case kb_webapp:client_connect(WebApp) of
+		ok -> {ok, Req, WebApp};
+		refuse -> {shutdown, Req} 
+	end.
 
 websocket_handle({text, Msg}, Req, WebApp) ->
 	kb_webapp:client_cast(WebApp, Msg),

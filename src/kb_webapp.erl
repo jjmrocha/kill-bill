@@ -42,7 +42,7 @@ app_cast(WebApp, Msg) ->
 	gen_server:cast(WebApp, {?ORIGIN_APP, Msg}).
 
 client_connect(WebApp) ->
-	gen_server:cast(WebApp, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_CONNECT}).
+	gen_server:call(WebApp, {?ORIGIN_CLIENT, ?MSG_TYPE_CONNECT}).
 
 client_disconnect(WebApp) ->
 	gen_server:cast(WebApp, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_DISCONNECT}).
@@ -56,28 +56,52 @@ client_cast(WebApp, Msg) ->
 -record(state, {callback, app_state}).
 
 init([Callback]) ->
-	error_logger:info_msg("Starting WebApp callback ~p [~p]...\n", [Callback, self()]),
-	Status = Callback:handle_init(),
-    {ok, #state{callback=Callback, app_state=Status}}.
+	case Callback:handle_init() of
+		{ok, State} ->
+			error_logger:info_msg("Starting WebApp callback ~p [~p]...\n", [Callback, self()]),
+    		{ok, #state{callback=Callback, app_state=State}};
+		{stop, Reason} ->
+			error_logger:error_msg("Callback ~p not starting, because [~p]...\n", [Callback, Reason]),
+			{stop, Reason}
+	end.
 
 handle_call({?ORIGIN_APP, Msg}, _From, State=#state{callback=Callback, app_state=Status}) ->
     case Callback:handle_app_call(Msg, Status) of
 		{reply, Reply, NStatus} -> {reply, Reply, State#state{app_state=NStatus}};
 		{stop, Reason, NStatus} -> {stop, Reason, State#state{app_state=NStatus}}
+	end;
+handle_call({?ORIGIN_CLIENT, ?MSG_TYPE_CONNECT}, From, State=#state{callback=Callback, app_state=Status}) ->
+	case Callback:handle_client_connect(From, Status) of
+		{ok, State} -> {reply, ok, State#state{app_state=State}};
+		{refuse, Reason, State} ->
+			error_logger:info_msg("Connection from ~p refused, because [~p]...\n", [From, Reason]),
+			{reply, refuse, State#state{app_state=State}};
+		{stop, Reason, State} ->
+			error_logger:error_msg("Callback ~p stopping, because [~p]...\n", [Callback, Reason]),
+			{stop, Reason, refuse, State#state{app_state=State}}
 	end.
 
-handle_cast({?ORIGIN_CLIENT, From, ?MSG_TYPE_CONNECT}, State=#state{callback=Callback, app_state=Status}) ->
-	NStatus = Callback:handle_client_connect(From, Status),
-    {noreply, State#state{app_state=NStatus}};
 handle_cast({?ORIGIN_CLIENT, From, ?MSG_TYPE_DISCONNECT}, State=#state{callback=Callback, app_state=Status}) ->
-	NStatus = Callback:handle_client_disconnect(From, Status),
-    {noreply, State#state{app_state=NStatus}};
+	case Callback:handle_client_disconnect(From, Status) of
+		{ok, State} -> {noreply, State#state{app_state=State}};
+		{stop, Reason, State} -> 
+			error_logger:error_msg("Callback ~p stopping, because [~p]...\n", [Callback, Reason]),
+			{stop, Reason, State#state{app_state=State}}
+	end;
 handle_cast({?ORIGIN_CLIENT, From, ?MSG_TYPE_INFO, Msg}, State=#state{callback=Callback, app_state=Status}) ->
-	NStatus = Callback:handle_client_cast(From, Msg, Status),
-    {noreply, State#state{app_state=NStatus}};
+	case Callback:handle_client_cast(From, Msg, Status) of
+		{ok, State} -> {noreply, State#state{app_state=State}};
+		{stop, Reason, State} -> 
+			error_logger:error_msg("Callback ~p stopping, because [~p]...\n", [Callback, Reason]),
+			{stop, Reason, State#state{app_state=State}}
+	end;
 handle_cast({?ORIGIN_APP, Msg}, State=#state{callback=Callback, app_state=Status}) ->
-	NStatus = Callback:handle_app_cast(Msg, Status),
-    {noreply, State#state{app_state=NStatus}}.
+	case Callback:handle_app_cast(Msg, Status) of
+		{ok, State} -> {noreply, State#state{app_state=State}};
+		{stop, Reason, State} -> 
+			error_logger:error_msg("Callback ~p stopping, because [~p]...\n", [Callback, Reason]),
+			{stop, Reason, State#state{app_state=State}}
+	end.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
