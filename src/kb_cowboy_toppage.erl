@@ -16,6 +16,8 @@
 
 -module(kb_cowboy_toppage).
 
+-behaviour(cowboy_http_handler).
+
 -include("kill_bill.hlr").
 
 -export([init/3, handle/2, terminate/3]).
