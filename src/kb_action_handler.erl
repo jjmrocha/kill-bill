@@ -14,7 +14,7 @@
 %% limitations under the License.
 %%
 
--module(kb_webapp_handler).
+-module(kb_action_handler).
 
 -export([behaviour_info/1]).
 
