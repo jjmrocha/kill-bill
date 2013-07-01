@@ -1,8 +1,7 @@
-<html>
-<header>
-<title>{% trans "title" %}</title>
-</header>
-<body>
+{% extends "layout.dtl" %}
+
+{% block content %}
+
 {% trans "greetings" %}
-</body>
-</html>
+
+{% endblock %}

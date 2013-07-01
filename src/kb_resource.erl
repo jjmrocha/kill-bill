@@ -70,21 +70,22 @@ load_resources(Config, Store) ->
 	Extension = "." ++ kb_util:remove_if_starts_with(Config#resource_config.file_extension, "."),
 	Wildcard = Config#resource_config.base_name ++ "*" ++ Extension,
 	Files = filelib:wildcard(Wildcard, Config#resource_config.file_dir),
-	add_resources(Config#resource_config.base_name, Extension, Files, Store).
+	add_resources(Config#resource_config.file_dir, Config#resource_config.base_name, Extension, Files, Store).
 
-add_resources(_Basename, _Extension, [], Store) -> Store;
-add_resources(Basename, Extension, [Filename|Tail], Store) ->
+add_resources(_Dir, _Basename, _Extension, [], Store) -> Store;
+add_resources(Dir, Basename, Extension, [Filename|Tail], Store) ->
+	FullName = filename:join(Dir, Filename),
 	Locale = get_locale_from_filename(Basename, Extension, Filename),
-	case file:script(Filename) of
+	case file:script(FullName) of
 		{ok, ValueList} ->
 			NStore = dict:store(Locale, convert_to_dict(ValueList), Store),
-			add_resources(Basename, Extension, Tail, NStore);
+			add_resources(Dir, Basename, Extension, Tail, NStore);
 		{error, {Line, _Mod, _Term}} ->
 			error_logger:error_msg("Error in line [~p] of file ~s\n", [Line, Filename]),
-			add_resources(Basename, Extension, Tail, Store);
+			add_resources(Dir, Basename, Extension, Tail, Store);
 		{error, Reason} ->
 			error_logger:error_msg("Error [~p] reading file ~s\n", [Reason, Filename]),
-			add_resources(Basename, Extension, Tail, Store)		
+			add_resources(Dir, Basename, Extension, Tail, Store)		
 	end.
 
 convert_to_dict(ValueList) ->
