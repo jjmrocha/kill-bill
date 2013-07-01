@@ -9,8 +9,7 @@
 				kb_template_sup
              ]},
 {applications, [kernel, 
-                stdlib,
-                cowboy
+                stdlib
                ]},
 {mod, {kill_bill_app, []}},
 {start_phases, []}

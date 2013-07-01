@@ -1,0 +1,8 @@
+<html>
+<header>
+<title>{% trans "title" %}</title>
+</header>
+<body>
+{% trans "greetings" %}
+</body>
+</html>

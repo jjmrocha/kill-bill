@@ -20,13 +20,33 @@
 
 behaviour_info(callbacks) ->
     [
-	 	{handle_init, 0}, % {ok, State} | {stop, Reason :: term()}
-	 	{handle_client_connect, 2}, % {ok, State} | {refuse, Reason :: term(), State} | {stop, Reason, State}
-        {handle_client_cast, 3}, % {ok, State} | {stop, Reason, State}
-		{handle_client_disconnect, 2}, % {ok, State} | {stop, Reason, State}
-		{handle_app_cast, 2}, % {ok, State} | {stop, Reason, State}
-		{handle_app_call, 2}, % {reply, Reply, State} | {stop, Reason, State}
-		{handle_terminate, 1} % {ok, State}
+	 	% INPUT: N/A
+		% OUTPUT: {ok, State} | {stop, Reason :: term()}
+	 	{handle_init, 0},
+		
+		% INPUT: Client, State
+		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State} | {stop, Reason, State}
+	 	{handle_client_connect, 2}, 
+		
+		% INPUT: Client, Msg, State
+		% OUTPUT: {ok, State} | {stop, Reason, State}
+        {handle_client_cast, 3}, 
+
+		% INPUT: Client, State
+		% OUTPUT: {ok, State} | {stop, Reason, State}
+		{handle_client_disconnect, 2},
+
+		% INPUT: Msg, State
+		% OUTPUT: {ok, State} | {stop, Reason, State}
+		{handle_app_cast, 2},
+
+		% INPUT: Msg, State
+		% OUTPUT: {reply, Reply, State} | {stop, Reason, State}
+		{handle_app_call, 2},
+
+		% INPUT: State
+		% OUTPUT: {ok, State}
+		{handle_terminate, 1}
     ];
 behaviour_info(_Other) ->
     undefined.

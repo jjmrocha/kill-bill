@@ -22,7 +22,9 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, [ResourceServer, ActionConfig]) ->
+init(_Transport, Req, Opts) ->
+	ResourceServer = lists:keyfind(resource_server, 1, Opts),
+	ActionConfig = lists:keyfind(action_config, 1, Opts),
 	{ok, Req, {ResourceServer, ActionConfig}}.
 
 handle(Req, {ResourceServer, ActionConfig}) ->

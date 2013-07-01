@@ -23,7 +23,8 @@
 init({_TransportName, _ProtocolName}, _Req, _Opts) ->
 	{upgrade, protocol, cowboy_websocket}.
 
-websocket_init(_TransportName, Req, [WebApp]) ->
+websocket_init(_TransportName, Req, Opts) ->
+	WebApp = lists:keyfind(web_app, 1, Opts),
 	case kb_webapp:client_connect(WebApp) of
 		ok -> {ok, Req, WebApp};
 		refuse -> {shutdown, Req} 

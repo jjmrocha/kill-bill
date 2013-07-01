@@ -48,7 +48,8 @@ set_chosen_language(Locale, Req) when is_tuple(Locale) ->
 
 get_locales([], List) -> lists:reverse(List);
 get_locales([H|T], List) ->
-	{Language, _Quality} = H,
+	{Lang, _Quality} = H,
+	Language = binary_to_list(Lang),
 	case get_locale(Language) of
 		none -> get_locales(T, List);
 		Locale -> get_locales(T, [Locale|List])

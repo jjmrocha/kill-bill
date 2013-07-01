@@ -20,12 +20,15 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, [ResourceServer, TemplateConfig]) ->
+init(_Transport, Req, Opts) ->
+	ResourceServer = lists:keyfind(resource_server, 1, Opts),
+	TemplateConfig = lists:keyfind(template_config, 1, Opts),
 	{ok, Req, {ResourceServer, TemplateConfig}}.
 
 handle(Req, {ResourceServer, TemplateConfig}) ->
 	{Path, _} = cowboy_req:path(Req),
-	Req2 = kb_template_util:execute(Path, TemplateConfig, ResourceServer, Req),
+	io:format("~p: ~p~n", [?MODULE, Path]),
+	Req2 = kb_template_util:execute(binary_to_list(Path), TemplateConfig, ResourceServer, Req),
 	{ok, Req2, {ResourceServer, TemplateConfig}}.
 
 terminate(_Reason, _Req, _State) ->
