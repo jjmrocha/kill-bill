@@ -1,4 +1,0 @@
-[
-{title, "Kill Bill Examples"},
-{greetings, "Hello world!"}
-].
