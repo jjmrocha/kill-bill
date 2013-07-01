@@ -63,7 +63,8 @@ handle_call({deploy, AppName, Callback, WebApp}, _From, State) ->
 		  	{ok, App} = kb_webapp_sup:start_webapp(Callback),
 			NState = dict:store(AppName, App, State),
 			Config = get_web_app_config(WebApp, App),
-			Dispatch = cowboy_router:compile([{Server#server_config.host, [Config]}]),
+			
+			Dispatch = cowboy_router:compile([{Server#server_config.host, Config}]),
 			
 			NbAcceptors = Server#server_config.acceptor_number,
 			TransOpts = get_transport_config(Server),
@@ -112,7 +113,7 @@ handle_info(Info, State) ->
     {noreply, State}.
 
 terminate(_Reason, _State) ->
-	error_logger:info_msg("Bang Bang, My Baby Shot Me Down\n", [?MODULE, self()]),
+	error_logger:info_msg("Bang Bang, My Baby Shot Me Down\n"),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -140,19 +141,27 @@ add_template(none, _ResourceServer, Config) -> Config;
 add_template(Template, ResourceServer, Config) ->
 	lists:append([
 		{"/", kb_cowboy_toppage, [ResourceServer, Template]},
-		{get_template_match(Template), kb_cowboy_template, [ResourceServer, Template]}
+		{get_template_match(Template), kb_cowboy_template, [
+			{resource_server, ResourceServer}, 
+			{template_config, Template}
+		]}
 	], Config).
 
 add_action(none, _ResourceServer, Config) -> Config;
 add_action(Action, ResourceServer, Config) ->
 	lists:append([
-		{get_action_match(Action), kb_cowboy_action, [ResourceServer, Action]}
+		{get_action_match(Action), kb_cowboy_action, [
+			{resource_server, ResourceServer}, 
+			{action_config, Action}
+		]}
 	], Config).
 
 add_websocket(none, _App, Config) -> Config;
 add_websocket(_Other, App, Config) ->
 	lists:append([
-		{"/websocket", kb_websocket, [App]}
+		{"/websocket", kb_cowboy_websocket, [
+			{web_app, App}
+		]}
 	], Config).
 
 add_static(none, Config) -> Config;

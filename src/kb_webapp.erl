@@ -32,8 +32,8 @@
 %% ====================================================================
 -export([start_link/1, app_call/2, app_cast/2, client_connect/1, client_disconnect/1, client_cast/2]).
 
-start_link(Args) ->
-	gen_server:start_link(?MODULE, Args, []).
+start_link(Callback) ->
+	gen_server:start_link(?MODULE, [Callback], []).
 
 app_call(WebApp, Msg) ->
 	gen_server:call(WebApp, {?ORIGIN_APP, Msg}).

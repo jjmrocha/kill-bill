@@ -27,8 +27,8 @@
 %% ====================================================================
 -export([start_link/1, get_resource/2, add_locale/3]).
 
-start_link(Args) ->
-	gen_server:start_link(?MODULE, Args, []).
+start_link(Config) ->
+	gen_server:start_link(?MODULE, [Config], []).
 
 get_resource(Server, Locales) ->
 	gen_server:call(Server, {resource, Locales}).
