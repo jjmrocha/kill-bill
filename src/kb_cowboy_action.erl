@@ -23,40 +23,88 @@
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
-	ResourceServer = lists:keyfind(resource_server, 1, Opts),
-	ActionConfig = lists:keyfind(action_config, 1, Opts),
-	{ok, Req, {ResourceServer, ActionConfig}}.
+	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
+	{_, ActionConfig} = lists:keyfind(action_config, 1, Opts),
+	{ok, Req, {ResourceServer, ActionConfig#action_config.callback}}.
 
-handle(Req, {ResourceServer, ActionConfig}) ->
-	Handler = ActionConfig#action_config.callback,
+handle(Req, {ResourceServer, Handler}) ->
 	{Method, Req1} = cowboy_req:method(Req),
-	{Path, Req2} = cowboy_req:path(Req1),
-	NoExtPath = kb_util:remove_if_ends_with(Path, ActionConfig#action_config.extension),
-	SplitPath = case binary:split(NoExtPath, <<"/">>, [global, trim]) of
-		[<<>> | Rest] -> Rest;
-		Else -> Else
-	end,
+	{Path, Req2} = cowboy_req:path_info(Req1),
 	Req4 = case Method of
 		<<"GET">> ->
 				{QSVals, Req3} = cowboy_req:qs_vals(Req2),
-				Response = Handler:get(SplitPath, QSVals),
-				handle_response(Response, Req3);
+				Response = Handler:get(Path, QSVals),
+				handle_response(Response, ResourceServer, Req3);
 		<<"POST">> ->
 				{ok, BodyQS, Req3} = cowboy_req:body_qs(Req2),
-				Response = Handler:post(SplitPath, BodyQS),			
-				handle_response(Response, Req3);
+				Response = Handler:post(Path, BodyQS),			
+				handle_response(Response, ResourceServer, Req3);
 		_ -> 
 			Output = io_lib:format("Action [~p] not found", [Path]),
 			{ok, Req3} = cowboy_req:reply(404, [], Output, Req2),
 			Req3	
 	end,
-	{ok, Req4, {ResourceServer, ActionConfig}}.
+	{ok, Req4, {ResourceServer, Handler}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.
 
-handle_response({html, _Value}, _Req) -> todo;
-handle_response({json, _Value}, _Req) -> todo;
-handle_response({dtl, _Template, _Args}, _Req) -> todo;
-handle_response({redirect, _Url}, _Req) -> todo;
-handle_response({raw, _Status, _Headers, _Body}, _Req) -> todo.
+handle_response({html, Value}, ResourceServer, Req) -> 
+	handle_response({raw, 200, [{<<"content-type">>, <<"text/html">>}], Value}, ResourceServer, Req);
+
+handle_response({json, Value}, ResourceServer, Req) -> 
+	Output = rfc4627:encode(Value),
+	handle_response({raw, 200, [{<<"content-type">>, <<"application/json">>}], Output}, ResourceServer, Req);
+
+handle_response({dtl, Template, Args}, ResourceServer, Req) ->
+	Dict = kb_http:get_dict(ResourceServer, Req),
+	case kb_dtl_util:execute(Template, Dict, Args) of
+		{ok, Html} ->
+			handle_response({html, Html}, ResourceServer, Req);
+		{error, not_found} ->
+			Output = io_lib:format("Template [~p] not found", [Template]),
+			handle_response({raw, 404, [], Output}, ResourceServer, Req);
+		{error, Reason} ->
+			Output = io_lib:format("Error ~p running template [~p]", [Reason, Template]),
+			handle_response({raw, 500, [], Output}, ResourceServer, Req)
+	end;
+
+% Redirect code was copied from https://github.com/tsujigiri/axiom
+handle_response({redirect, UrlOrPath}, _ResourceServer, Req) -> 
+	{ok, UrlRegex} = re:compile("^https?://"),
+	{Url, Req1} = case re:run(UrlOrPath, UrlRegex) of
+		{match, _} -> {UrlOrPath, Req};
+		nomatch -> assemble_url(UrlOrPath, Req)
+	end,
+	{Method, Req2} = cowboy_req:method(Req1),
+	{Version, Req3} = cowboy_req:version(Req2),
+	Status = case {Version, Method} of
+		{{1,1}, <<"GET">>} -> 302;
+		{{1,1}, _} -> 303;
+		_ -> 302
+	end,
+	Req4 = cowboy_req:set_meta(resp_status, Status, Req3),
+	cowboy_req:set_resp_header(<<"Location">>, Url, Req4);
+	
+handle_response({raw, Status, Headers, Body}, _ResourceServer, Req) -> 
+	{ok, Req2} = cowboy_req:reply(Status, Headers, Body, Req),
+	Req2.
+
+assemble_url(Path, Req) ->
+	{Host, Req1} = cowboy_req:host(Req),
+	{Port, Req2} = cowboy_req:port(Req1),
+	Url = [
+		<<"http">>,
+		case cowboy_req:get(transport, Req2) of
+			ranch_ssl -> <<"s">>;
+			_ -> <<>>
+		end,
+		<<"://">>,
+		Host,
+		case Port of
+			80 -> <<>>;
+			Port -> [<<":">>, integer_to_list(Port)]
+		end,
+		Path
+	],
+	{Url, Req2}.

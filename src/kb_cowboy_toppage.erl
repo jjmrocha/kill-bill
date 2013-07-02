@@ -22,12 +22,14 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, [ResourceServer, TemplateConfig]) ->
-	{ok, Req, {ResourceServer, TemplateConfig}}.
+init(_Transport, Req, Opts) ->
+	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
+	{_, TemplateConfig} = lists:keyfind(template_config, 1, Opts),
+	{ok, Req, {ResourceServer, TemplateConfig#template_config.top_page}}.
 
-handle(Req, {ResourceServer, TemplateConfig}) ->
-	Req2 = kb_template_util:execute(TemplateConfig#template_config.top_page, TemplateConfig, ResourceServer, Req),
-	{ok, Req2, {ResourceServer, TemplateConfig}}.
+handle(Req, {ResourceServer, TopPage}) ->
+	Req2 = kb_template_util:execute(TopPage, ResourceServer, Req),
+	{ok, Req2, {ResourceServer, TopPage}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.
