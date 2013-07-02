@@ -67,7 +67,7 @@ handle_call({deploy, AppName, Callback, WebApp}, _From, State) ->
 			Dispatch = cowboy_router:compile([{Server#server_config.host, Config}]),
 			
 			NbAcceptors = Server#server_config.acceptor_number,
-			TransOpts = get_transport_config(Server),
+			TransOpts = get_server_config(Server),
 			ProtoOpts = [{env, [{dispatch, Dispatch}]}],
 			
 			case Server#server_config.protocol of
@@ -130,7 +130,7 @@ get_web_app_config(WebApp, App) ->
 	Action = add_action(WebApp#web_app.action, ResourceServer, Template),
 	WebSocket = add_websocket(WebApp#web_app.websocket, App, Action) ,
 	Static = add_static(WebApp#web_app.static, WebSocket),
-	Static.
+	lists:reverse(Static).
 			
 get_resource_server(none) -> none;
 get_resource_server(Resource) ->
@@ -140,21 +140,24 @@ get_resource_server(Resource) ->
 add_template(none, _ResourceServer, Config) -> Config;
 add_template(Template, ResourceServer, Config) ->
 	lists:append([
-		{"/", kb_cowboy_toppage, [ResourceServer, Template]},
-		{get_template_match(Template), kb_cowboy_template, [
+		{"/", kb_cowboy_toppage, [
 			{resource_server, ResourceServer}, 
 			{template_config, Template}
+		]},
+		{get_template_match(Template), kb_cowboy_template, [
+			{resource_server, ResourceServer}
 		]}
 	], Config).
 
-add_action(none, _ResourceServer, Config) -> Config;
-add_action(Action, ResourceServer, Config) ->
-	lists:append([
+add_action([], _ResourceServer, Config) -> Config;
+add_action([Action|T], ResourceServer, Config) ->
+	NewConfig = lists:append([
 		{get_action_match(Action), kb_cowboy_action, [
 			{resource_server, ResourceServer}, 
 			{action_config, Action}
 		]}
-	], Config).
+	], Config),
+	add_action(T, ResourceServer, NewConfig).
 
 add_websocket(none, _App, Config) -> Config;
 add_websocket(_Other, App, Config) ->
@@ -174,13 +177,16 @@ add_static(Static, Config) ->
 	], Config).
 
 get_action_match(Action) ->
-	"/[...]" ++ Action#action_config.extension.
+	"/" ++ remove_slashs(Action#action_config.prefix) ++ "/[...]".
 
 get_template_match(Template) ->
-	"/[...]" ++ Template#template_config.extension.
+	"/" ++ remove_slashs(Template#template_config.prefix) ++ "/[...]".
 
 get_static_match(Static) ->
-	"/" ++ remove_slashs(Static#static_config.context) ++ "/[...]".
+	case Static#static_config.context of
+		"/" -> "/[...]";
+		Path -> "/" ++ remove_slashs(Path) ++ "/[...]"
+	end.
 
 get_static_dir(Static) ->
 	Static#static_config.dir.
@@ -188,7 +194,7 @@ get_static_dir(Static) ->
 remove_slashs(Path) ->
 	kb_util:remove_if_ends_with(kb_util:remove_if_starts_with(Path, "/"), "/").
 
-get_transport_config(Server) ->
+get_server_config(Server) ->
 	lists:append([{port, Server#server_config.port}], get_ssl(Server#server_config.protocol, Server#server_config.ssl)).
 
 get_ssl(?PROTOCOL_HTTP, _Ssl) -> [];

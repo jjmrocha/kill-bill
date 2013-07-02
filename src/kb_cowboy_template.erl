@@ -21,15 +21,18 @@
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
-	ResourceServer = lists:keyfind(resource_server, 1, Opts),
-	TemplateConfig = lists:keyfind(template_config, 1, Opts),
-	{ok, Req, {ResourceServer, TemplateConfig}}.
+	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
+	{ok, Req, {ResourceServer}}.
 
-handle(Req, {ResourceServer, TemplateConfig}) ->
-	{Path, _} = cowboy_req:path(Req),
-	io:format("~p: ~p~n", [?MODULE, Path]),
-	Req2 = kb_template_util:execute(binary_to_list(Path), TemplateConfig, ResourceServer, Req),
-	{ok, Req2, {ResourceServer, TemplateConfig}}.
+handle(Req, {ResourceServer}) ->
+	{Path, Req1} = cowboy_req:path_info(Req),
+	NewPath = join(Path, <<>>),
+	Req2 = kb_template_util:execute(NewPath, ResourceServer, Req1),
+	{ok, Req2, {ResourceServer}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.
+
+join([], Value) -> Value;
+join([H | T], <<>>) -> join(T, H);
+join([H | T], Value) ->	join(T, <<Value/binary, $_, H/binary>>).

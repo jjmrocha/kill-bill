@@ -21,11 +21,11 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([execute/4]).
+-export([execute/3]).
 
-execute(Path, TemplateConfig, ResourceServer, Req) -> 
-	Dtl = get_dtl(Path, TemplateConfig),
-	Dict = get_dict(ResourceServer, Req),
+execute(Path, ResourceServer, Req) -> 
+	Dtl = get_dtl(Path),
+	Dict = kb_http:get_dict(ResourceServer, Req),
 	{ok, Req2} =  case kb_dtl_util:execute(Dtl, Dict, []) of
 		{ok, Html} ->
 			cowboy_req:reply(200, [{<<"content-type">>, <<"text/html">>}],	Html, Req);
@@ -42,15 +42,8 @@ execute(Path, TemplateConfig, ResourceServer, Req) ->
 %% Internal functions
 %% ====================================================================
 
-get_dtl(Path, TemplateConfig) -> 
-	NoExt = kb_util:remove_if_ends_with(Path, TemplateConfig#template_config.extension),
-	NoPath = case string:rstr(NoExt, "/") of
-		0 -> NoExt;
-		Pos -> string:substr(NoExt, Pos + 1)
-	end,
-	list_to_atom(NoPath ++ "_dtl").
 
-get_dict(none, _Req) -> none;
-get_dict(ResourceServer, Req) ->
-	Locales = kb_http:get_accept_languages(Req),
-	kb_resource:get_resource(ResourceServer, Locales).
+get_dtl(Path) when is_binary(Path) -> 
+	get_dtl(binary_to_list(Path));
+get_dtl(Path) -> 
+	list_to_atom(Path ++ "_dtl").

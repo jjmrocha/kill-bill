@@ -21,7 +21,7 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([get_accept_languages/1, set_chosen_language/2]).
+-export([get_accept_languages/1, set_chosen_language/2, get_dict/2]).
 
 get_accept_languages(Req) ->
 	{ChosenLanguage, Req2} = cowboy_req:cookie(?COOKIE_CHOSEN_LANGUAGE, Req),
@@ -41,6 +41,11 @@ get_accept_languages(Req) ->
 set_chosen_language(Locale, Req) when is_tuple(Locale) ->
 	BinLocale = term_to_binary(Locale),
 	cowboy_req:set_resp_cookie(?COOKIE_CHOSEN_LANGUAGE, BinLocale, [{path, <<"/">>}], Req).
+
+get_dict(none, _Req) -> none;
+get_dict(ResourceServer, Req) ->
+	Locales = get_accept_languages(Req),
+	kb_resource:get_resource(ResourceServer, Locales).
 
 %% ====================================================================
 %% Internal functions

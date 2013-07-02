@@ -20,8 +20,13 @@
 
 behaviour_info(callbacks) ->
     [
-	    {get, 2}, % {html, Value} | {json, Value} | {dtl, Template, Args} | {redirect, Url} | {raw, Status, Headers, Body}
-		{post, 2} % {html, Value} | {json, Value} | {dtl, Template, Args} | {redirect, Url} | {raw, Status, Headers, Body}
+	 	% INPUT: Path, Args
+		% OUTPUT: {html, Value} | {json, Value} | {dtl, Template, Args} | {redirect, Url} | {raw, Status, Headers, Body}
+	    {get, 2},
+		
+		% INPUT: Path, Args
+		% OUTPUT: {html, Value} | {json, Value} | {dtl, Template, Args} | {redirect, Url} | {raw, Status, Headers, Body} 
+		{post, 2}
     ];
 behaviour_info(_Other) ->
     undefined.

@@ -1,9 +1,12 @@
 <html>
-<header>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<title>{% block title %}{% trans "title" %}{% endblock %}</title>
-</header>
-<body>
-{% block content %}{% endblock %}
-</body>
+	<header>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>{% block title %}{% trans "title" %}{% endblock %}</title>
+	</header>
+	<body>
+		<p align="left">
+			<img src="/images/kill-bill-logo.png">
+		</p>
+		{% block content %}{% endblock %}
+	</body>
 </html>
