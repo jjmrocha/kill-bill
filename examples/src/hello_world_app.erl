@@ -8,11 +8,11 @@
 -export([stop/1]).
 
 start(_Type, _Args) ->
-	Template = #template_config{},
-	Resource = #resource_config{},
-	Action = [#action_config{callback=hello_world_action}],
-	Static = #static_config{},
-	WebApp = #web_app{template=Template, resource=Resource, action=Action, static=Static},
+	WebApp = #web_app{template = #template_config{}, 
+					  resource = #resource_config{}, 
+					  action = [ #action_config{callback=hello_world_action} ], 
+					  static = #static_config{}
+			},
 	
 	kill_bill:deploy(hello_world, hello_world_webapp, WebApp),
 

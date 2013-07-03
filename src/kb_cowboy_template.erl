@@ -21,7 +21,7 @@
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
-	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
+	ResourceServer = proplists:get_value(resource_server, Opts),
 	{ok, Req, {ResourceServer}}.
 
 handle(Req, {ResourceServer}) ->

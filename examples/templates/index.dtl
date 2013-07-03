@@ -2,6 +2,9 @@
 
 {% block content %}
 
-{% trans "greetings" %}
+<h1>{% trans "index_greetings" %}</h1>
+<br>
+<a href="/action/form">{% trans "form_title" %}</a><br>
+<a href="/action/google">{% trans "index_redirect" %}</a><br>
 
 {% endblock %}

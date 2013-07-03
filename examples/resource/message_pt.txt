@@ -1,4 +1,16 @@
 [
-{"title", "Exemplos Kill Bill"},
-{"greetings", "Ol&aacute; Mundo!"}
+{"layout_title", "Exemplos Kill Bill"},
+
+{"index_greetings", "Ol&aacute; Mundo!"},
+{"index_redirect", "Ir para o Google"},
+
+{"args_list_title", "Par&acirc;metros do GET"},
+{"args_list_empty_list", "Sem par&acirc;metros"},
+
+{"form_title", "Exemplo de Form"},
+{"form_field_id", "ID:"},
+{"form_field_name", "Nome:"},
+{"form_submit", "Enviar"},
+{"form_empty_list", "Sem dados"}
+
 ].
