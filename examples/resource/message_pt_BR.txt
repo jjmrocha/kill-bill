@@ -1,4 +1,0 @@
-[
-{"title", "Exemplos Kill Bill"},
-{"greetings", "Oi Mundo!"}
-].

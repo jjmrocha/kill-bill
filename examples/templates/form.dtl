@@ -1,0 +1,33 @@
+{% extends "layout.dtl" %}
+
+{% block content %}
+
+<h1>{% trans "form_title" %}</h1>
+<br>
+<form action="/action/form" method="post" accept-charset="iso-8859-1">
+	<table border="0">
+		<tr>
+			<td>{% trans "form_field_id" %}</td><td><input type="text" name="id"/></td>
+		</tr>
+		<tr>
+			<td>{% trans "form_field_name" %}</td><td><input type="text" name="name"/></td>
+		</tr>
+		<tr>
+			<td colspan="2"><input type="submit" value="{% trans "form_submit" %}"/></td>
+		</tr>
+	</table>  
+</form>
+<br>
+{% if arg_list %}
+	<table border="1">
+		{% for arg, value in arg_list %}	
+		<tr>
+			<td>{{ arg }}</td><td>{{ value }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+{% else %}
+	<p>{% trans "form_empty_list" %}</p>
+{% endif %}
+
+{% endblock %}
