@@ -23,8 +23,8 @@
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
-	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
-	{_, ActionConfig} = lists:keyfind(action_config, 1, Opts),
+	ResourceServer = proplists:get_value(resource_server, Opts),
+	ActionConfig = proplists:get_value(action_config, Opts),
 	{ok, Req, {ResourceServer, ActionConfig#action_config.callback}}.
 
 handle(Req, {ResourceServer, Handler}) ->
@@ -40,9 +40,8 @@ handle(Req, {ResourceServer, Handler}) ->
 				Response = Handler:post(Path, BodyQS),			
 				handle_response(Response, ResourceServer, Req3);
 		_ -> 
-			Output = io_lib:format("Action [~p] not found", [Path]),
-			{ok, Req3} = cowboy_req:reply(404, [], Output, Req2),
-			Req3	
+			Output = io_lib:format("Method [~p] not suported", [Method]),
+			handle_response({raw, 501, [], Output}, ResourceServer, Req2)
 	end,
 	{ok, Req4, {ResourceServer, Handler}}.
 
@@ -53,7 +52,7 @@ handle_response({html, Value}, ResourceServer, Req) ->
 	handle_response({raw, 200, [{<<"content-type">>, <<"text/html">>}], Value}, ResourceServer, Req);
 
 handle_response({json, Value}, ResourceServer, Req) -> 
-	Output = rfc4627:encode(Value),
+	Output = kb_json:encode(Value),
 	handle_response({raw, 200, [{<<"content-type">>, <<"application/json">>}], Output}, ResourceServer, Req);
 
 handle_response({dtl, Template, Args}, ResourceServer, Req) ->
@@ -71,7 +70,7 @@ handle_response({dtl, Template, Args}, ResourceServer, Req) ->
 
 % Redirect code was copied from https://github.com/tsujigiri/axiom
 handle_response({redirect, UrlOrPath}, _ResourceServer, Req) -> 
-	{ok, UrlRegex} = re:compile("^https?://"),
+	{ok, UrlRegex} = re:compile("^(http|https)://"),
 	{Url, Req1} = case re:run(UrlOrPath, UrlRegex) of
 		{match, _} -> {UrlOrPath, Req};
 		nomatch -> assemble_url(UrlOrPath, Req)

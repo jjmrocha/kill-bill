@@ -23,8 +23,8 @@
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
-	{_, ResourceServer} = lists:keyfind(resource_server, 1, Opts),
-	{_, TemplateConfig} = lists:keyfind(template_config, 1, Opts),
+	ResourceServer = proplists:get_value(resource_server, Opts),
+	TemplateConfig = proplists:get_value(template_config, Opts),
 	{ok, Req, {ResourceServer, TemplateConfig#template_config.top_page}}.
 
 handle(Req, {ResourceServer, TopPage}) ->
