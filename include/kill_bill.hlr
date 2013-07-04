@@ -17,6 +17,9 @@
 -define(PROTOCOL_HTTP, http).
 -define(PROTOCOL_HTTPS, https).
 
+-define(ACTION_TYPE_BASIC, action_basic).
+-define(ACTION_TYPE_FULL, action_full).
+
 -record(server_config, {
 				host = '_',
 				protocol = ?PROTOCOL_HTTP,
@@ -47,23 +50,32 @@
 		).				
 					
 -record(static_config, {
-				context = "/", 
+				path = "/", 
 				dir = "./static"
 			}
 		).
 		
 -record(action_config, { 
-				prefix = "action",
+				prefix = "service",
+				type = ?ACTION_TYPE_BASIC,
 				callback = none							
 			}
 		).		
 
 -record(web_app, {
+				context = "/",
 				server = #server_config{},
 				template = none,
 				resource = none,
 				action = [],
 				static = none,
 				websocket = none
+			}
+		).
+		
+-record(kb_request, {
+				context,
+				method,
+				data
 			}
 		).

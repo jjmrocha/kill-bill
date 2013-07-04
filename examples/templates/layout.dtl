@@ -5,7 +5,7 @@
 	</header>
 	<body>
 		<p align="left">
-			<img src="/images/kill-bill-logo.png">
+			<img src="{{ context }}images/kill-bill-logo.png">
 		</p>
 		{% block content %}{% endblock %}
 	</body>

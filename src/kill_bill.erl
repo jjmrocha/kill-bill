@@ -125,67 +125,80 @@ code_change(_OldVsn, State, _Extra) ->
 %% ====================================================================
 
 get_web_app_config(WebApp, App) ->
+	Context = get_context(WebApp#web_app.context),
 	ResourceServer = get_resource_server(WebApp#web_app.resource),
-	Template = add_template(WebApp#web_app.template, ResourceServer, []),
-	Action = add_action(WebApp#web_app.action, ResourceServer, Template),
-	WebSocket = add_websocket(WebApp#web_app.websocket, App, Action) ,
-	Static = add_static(WebApp#web_app.static, WebSocket),
+	Template = add_template(WebApp#web_app.template, Context, ResourceServer, []),
+	Action = add_action(WebApp#web_app.action, Context, ResourceServer, Template),
+	WebSocket = add_websocket(WebApp#web_app.websocket, Context, App, Action) ,
+	Static = add_static(WebApp#web_app.static, Context, WebSocket),
 	lists:reverse(Static).
+
+get_context(Context) ->
+	case remove_slashs(Context) of
+		[] -> "/";
+		Clean -> "/" ++ Clean ++ "/"
+	end.
 			
 get_resource_server(none) -> none;
 get_resource_server(Resource) ->
 	{ok, Server} = kb_resource_sup:start_resource_server(Resource),
 	Server.
   
-add_template(none, _ResourceServer, Config) -> Config;
-add_template(Template, ResourceServer, Config) ->
+add_template(none, _Context, _ResourceServer, Config) -> Config;
+add_template(Template, Context, ResourceServer, Config) ->
 	lists:append([
-		{"/", kb_cowboy_toppage, [
+		{Context, kb_cowboy_toppage, [
 			{resource_server, ResourceServer}, 
-			{template_config, Template}
+			{template_config, Template},
+			{context, Context}
 		]},
-		{get_template_match(Template), kb_cowboy_template, [
-			{resource_server, ResourceServer}
+		{get_template_match(Template, Context), kb_cowboy_template, [
+			{resource_server, ResourceServer},
+			{context, Context}
 		]}
 	], Config).
 
-add_action([], _ResourceServer, Config) -> Config;
-add_action([Action|T], ResourceServer, Config) ->
+add_action([], _ResourceServer, _Context, Config) -> Config;
+add_action([Action|T], Context, ResourceServer, Config) ->
 	NewConfig = lists:append([
-		{get_action_match(Action), kb_cowboy_action, [
+		{get_action_match(Action, Context), get_action_handler(Action#action_config.type), [
 			{resource_server, ResourceServer}, 
-			{action_config, Action}
+			{action_config, Action},
+			{context, Context}
 		]}
 	], Config),
-	add_action(T, ResourceServer, NewConfig).
+	add_action(T, Context, ResourceServer, NewConfig).
 
-add_websocket(none, _App, Config) -> Config;
-add_websocket(_Other, App, Config) ->
+get_action_handler(?ACTION_TYPE_BASIC) -> kb_cowboy_action_basic;
+get_action_handler(?ACTION_TYPE_FULL) -> kb_cowboy_action_full.
+
+add_websocket(none, _App, _Context, Config) -> Config;
+add_websocket(_Other, App, Context, Config) ->
 	lists:append([
-		{"/websocket", kb_cowboy_websocket, [
+		{string:concat(Context, "websocket"), kb_cowboy_websocket, [
 			{web_app, App}
 		]}
 	], Config).
 
-add_static(none, Config) -> Config;
-add_static(Static, Config) ->
+add_static(none, _Context, Config) -> Config;
+add_static(Static, Context, Config) ->
 	lists:append([
-		{get_static_match(Static), cowboy_static, [
+		{get_static_match(Static, Context), cowboy_static, [
 			{directory, get_static_dir(Static)},
 			{mimetypes, {fun mimetypes:path_to_mimes/2, default}}
 		]}
 	], Config).
 
-get_action_match(Action) ->
-	"/" ++ remove_slashs(Action#action_config.prefix) ++ "/[...]".
+get_action_match(Action, Context) ->
+	Context ++ remove_slashs(Action#action_config.prefix) ++ "/[...]".
 
-get_template_match(Template) ->
-	"/" ++ remove_slashs(Template#template_config.prefix) ++ "/[...]".
+get_template_match(Template, Context) ->
+	Context ++ remove_slashs(Template#template_config.prefix) ++ "/[...]".
 
-get_static_match(Static) ->
-	case Static#static_config.context of
-		"/" -> "/[...]";
-		Path -> "/" ++ remove_slashs(Path) ++ "/[...]"
+get_static_match(Static, Context) ->
+	case Static#static_config.path of
+		"/" -> string:concat(Context, "[...]");
+		Path -> Context ++ remove_slashs(Path) ++ "/[...]"
 	end.
 
 get_static_dir(Static) ->

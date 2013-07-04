@@ -14,26 +14,27 @@
 %% limitations under the License.
 %%
 
--module(kb_cowboy_template).
+-module(kb_cowboy_action_full).
 
 -behaviour(cowboy_http_handler).
+
+-include("kill_bill.hlr").
 
 -export([init/3, handle/2, terminate/3]).
 
 init(_Transport, Req, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
+	ActionConfig = proplists:get_value(action_config, Opts),
 	Context = proplists:get_value(context, Opts),
-	{ok, Req, {ResourceServer, list_to_binary(Context)}}.
+	{ok, Req, {ResourceServer, ActionConfig#action_config.callback, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, Context}) ->
-	{Path, Req1} = cowboy_req:path_info(Req),
-	NewPath = join(Path, <<>>),
-	Req2 = kb_template_util:execute(Context, NewPath, ResourceServer, Req1),
-	{ok, Req2, {ResourceServer, Context}}.
+handle(Req, {ResourceServer, Handler, Context}) ->
+	{Method, Req1} = cowboy_req:method(Req),
+	{Path, Req2} = cowboy_req:path_info(Req1),
+	Request = #kb_request{context=Context, method=Method, data=Req2},
+	{Response, Request1} = Handler:handle(Method, Path, Request),
+	Req3 = kb_response:handle(Response, Context, ResourceServer, Request1#kb_request.data),
+	{ok, Req3, {ResourceServer, Handler, Context}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.
-
-join([], Value) -> Value;
-join([H | T], <<>>) -> join(T, H);
-join([H | T], Value) ->	join(T, <<Value/binary, $_, H/binary>>).

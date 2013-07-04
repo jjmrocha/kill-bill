@@ -1,6 +1,6 @@
--module(hello_world_action).
+-module(hello_world_action_basic).
 
--behaviour(kb_action_handler).
+-behaviour(kb_action_basic_handler).
 
 %% ====================================================================
 %% API functions
@@ -20,7 +20,7 @@ get([<<"args">>], Args) ->
 	{dtl, args_list_dtl, [{arg_list, Args}]};
 
 get([<<"form">>], _Args) ->
-	{dtl, form_dtl, []};
+	{dtl, form_dtl, [{action, <<"service/form">>}]};
 
 get([<<"google">>], _Args) ->
 	{redirect, <<"http://www.google.com">>};
@@ -30,7 +30,7 @@ get(_Path, _Args) ->
 
 
 post([<<"form">>], Args) ->
-	{dtl, form_dtl, [{arg_list, Args}]};
+	{dtl, form_dtl, [{action, <<"service/form">>}, {arg_list, Args}]};
 
 post(_Path, _Args) ->
 	{raw, 404, [], "Not found!"}.
