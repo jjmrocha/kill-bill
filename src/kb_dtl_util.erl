@@ -19,17 +19,17 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([execute/3, execute/2]).
+-export([execute/4, execute/3]).
 
-execute(Dtl, Args) -> 
-	try render(Dtl, Args) of
+execute(Context, Dtl, Args) -> 
+	try render(Context, Dtl, Args) of
 		Result -> Result
 	catch
 		_Type:_Error -> {error, not_found}
 	end. 
 
-execute(Dtl, none, Args) -> execute(Dtl, Args);
-execute(Dtl, Dict, Args) ->
+execute(Context, Dtl, none, Args) -> execute(Context, Dtl, Args);
+execute(Context, Dtl, Dict, Args) ->
 	Fun = fun(Val) ->
 		case dict:find(Val, Dict) of
 			error -> "{" ++ Val ++ "}";
@@ -38,7 +38,7 @@ execute(Dtl, Dict, Args) ->
 	end,
 	Options = [{translation_fun, Fun}],
 	
-	try render(Dtl, Args, Options) of
+	try render(Context, Dtl, Args, Options) of
 		Result -> Result
 	catch
 		_Type:_Error -> {error, not_found}
@@ -48,14 +48,17 @@ execute(Dtl, Dict, Args) ->
 %% Internal functions
 %% ====================================================================
 
-render(Dtl, Args) ->
-	case Dtl:render(Args) of
+render(Context, Dtl, Args) ->
+	case Dtl:render(add_context(Context, Args)) of
 		{ok, IOList} -> {ok, IOList};
 		{error, Err} -> {error, Err}
 	end.
 
-render(Dtl, Args, Options) ->
-	case Dtl:render(Args, Options) of
+render(Context, Dtl, Args, Options) ->
+	case Dtl:render(add_context(Context, Args), Options) of
 		{ok, IOList} -> {ok, IOList};
 		{error, Err} -> {error, Err}
 	end.
+
+add_context(Context, Args) ->
+	lists:append([{context, Context}], Args).

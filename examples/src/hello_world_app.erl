@@ -8,9 +8,13 @@
 -export([stop/1]).
 
 start(_Type, _Args) ->
-	WebApp = #web_app{template = #template_config{}, 
+	WebApp = #web_app{context = "/examples/",
+					  template = #template_config{}, 
 					  resource = #resource_config{}, 
-					  action = [ #action_config{callback=hello_world_action} ], 
+					  action = [ #action_config{callback=hello_world_action_basic},
+								 #action_config{prefix = "action",
+												type = ?ACTION_TYPE_FULL,
+												callback=hello_world_action_full}], 
 					  static = #static_config{}
 			},
 	

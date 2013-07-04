@@ -16,12 +16,12 @@
 
 -module(kb_http).
 
--define(COOKIE_CHOSEN_LANGUAGE, <<"chosen-language">>).
+-define(COOKIE_CHOSEN_LANGUAGE, <<"kb-chosen-language">>).
 
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([get_accept_languages/1, set_chosen_language/2, get_dict/2]).
+-export([get_accept_languages/1, set_chosen_language/3, set_cookie/4, get_dict/2]).
 
 get_accept_languages(Req) ->
 	{ChosenLanguage, Req2} = cowboy_req:cookie(?COOKIE_CHOSEN_LANGUAGE, Req),
@@ -35,17 +35,23 @@ get_accept_languages(Req) ->
 					AcceptLanguage2 = lists:sort(Fun, AcceptLanguages),
 					get_locales(AcceptLanguage2, [])
 			end;
-		_ -> binary_to_term(ChosenLanguage)
+		_ -> [get_locale(binary_to_list(ChosenLanguage))]
 	end.
 
-set_chosen_language(Locale, Req) when is_tuple(Locale) ->
-	BinLocale = term_to_binary(Locale),
-	cowboy_req:set_resp_cookie(?COOKIE_CHOSEN_LANGUAGE, BinLocale, [{path, <<"/">>}], Req).
+set_chosen_language(Path, Locale, Req) when is_tuple(Locale) ->
+	BinLocale = case Locale of
+		{Language, none} -> list_to_binary(Language);
+		{Language, Country} -> list_to_binary(Language ++ "-" ++ Country)
+	end,
+	set_cookie(Path, ?COOKIE_CHOSEN_LANGUAGE, BinLocale, Req).
 
 get_dict(none, _Req) -> none;
 get_dict(ResourceServer, Req) ->
 	Locales = get_accept_languages(Req),
 	kb_resource:get_resource(ResourceServer, Locales).
+
+set_cookie(Path, CookieName, Value, Req) ->
+	cowboy_req:set_resp_cookie(CookieName, Value, [{path, Path}], Req).
 
 %% ====================================================================
 %% Internal functions

@@ -21,22 +21,11 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([execute/3]).
+-export([execute/4]).
 
-execute(Path, ResourceServer, Req) -> 
+execute(Context, Path, ResourceServer, Req) -> 
 	Dtl = get_dtl(Path),
-	Dict = kb_http:get_dict(ResourceServer, Req),
-	{ok, Req2} =  case kb_dtl_util:execute(Dtl, Dict, []) of
-		{ok, Html} ->
-			cowboy_req:reply(200, [{<<"content-type">>, <<"text/html">>}],	Html, Req);
-		{error, not_found} ->
-			Output = io_lib:format("Template [~p] not found", [Path]),
-			cowboy_req:reply(404, [], Output, Req);
-		{error, Reason} ->
-			Output = io_lib:format("Error ~p running template [~p]", [Reason, Path]),
-			cowboy_req:reply(500, [], Output, Req)
-	end,
-	Req2.
+	kb_response:handle({dtl, Dtl, []}, Context, ResourceServer, Req).
 
 %% ====================================================================
 %% Internal functions
