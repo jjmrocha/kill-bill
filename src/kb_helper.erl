@@ -22,7 +22,7 @@
 %% API functions
 %% ====================================================================
 -export([get_args/1, 
-		 set_cookie/3, 
+		 set_cookie/4, 
 		 get_cookie/2,
 		 set_locale/2,
 		 get_context/1]).
@@ -38,8 +38,8 @@ get_args(Req) when is_record(Req, kb_request) ->
 		_ -> {[], Req}
 	end.
 
-set_cookie(Name, Value, Req) when is_binary(Name) andalso is_binary(Value) andalso is_record(Req, kb_request) ->
-	Req1 = kb_http:set_cookie(Req#kb_request.context, Name, Value, Req#kb_request.data),
+set_cookie(Name, Value, MaxAge, Req) when is_binary(Name) andalso is_binary(Value) andalso is_integer(MaxAge) andalso is_record(Req, kb_request) ->
+	Req1 = kb_http:set_cookie(Req#kb_request.context, Name, Value, MaxAge, Req#kb_request.data),
 	Req#kb_request{data=Req1}.
 
 get_cookie(Name, Req) when is_binary(Name) andalso is_record(Req, kb_request) ->

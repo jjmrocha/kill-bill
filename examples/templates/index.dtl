@@ -18,4 +18,9 @@
 <a href="{{ context }}service/json/1/create?name=Joe&surname=Armstrong">{% trans "index_json" %}</a><br>
 <a href="{{ context }}service/google">{% trans "index_redirect" %}</a><br>
 
+<br>
+<h1>{% trans "index_websocket" %}</h1>
+<a href="{{ context }}page/websocket">{% trans "index_websocket" %}</a><br>
+<a href="{{ context }}service/client?msg=Hello">{% trans "index_websocket" %}</a><br>
+
 {% endblock %}

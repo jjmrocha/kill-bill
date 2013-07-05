@@ -61,6 +61,11 @@
 				callback = none							
 			}
 		).		
+		
+-record(websocket_config, { 
+				path = "websocket"					
+			}
+		).			
 
 -record(web_app, {
 				context = "/",

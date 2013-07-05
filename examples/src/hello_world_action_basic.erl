@@ -25,6 +25,11 @@ get([<<"form">>], _Args) ->
 get([<<"google">>], _Args) ->
 	{redirect, <<"http://www.google.com">>};
 
+get([<<"client">>], Args) ->
+	Msg = proplists:get_value(<<"msg">>, Args),
+	kill_bill:cast(hello_world, Msg),
+	{html, "<html><body>Send!</body></html>"};
+
 get(_Path, _Args) ->
 	{raw, 404, [], "Not found!"}.
 
