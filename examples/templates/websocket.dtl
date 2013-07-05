@@ -1,0 +1,53 @@
+{% extends "layout.dtl" %}
+
+{% block header %}
+<script	src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="{{ context }}/js/bullet.js"></script>
+{% endblock %}
+
+{% block content %}
+<p>
+	<input type="text" name="msg" id="msg"/>
+	<br/>
+	<button id="send">
+		Send
+	</button>
+</p>
+<br/>
+<p id="status">
+	&nbsp;
+</p>
+
+<script type="text/javascript">
+	var bullet = $.bullet("ws://127.0.0.1:8080{{ context }}websocket", {});
+
+	bullet.onopen = function() {
+		write('online');
+	};
+
+	bullet.onclose = bullet.ondisconnect = function() {
+		write('offline');
+	};
+
+	bullet.onmessage = function(e) {
+		write(e.data);
+	};
+
+	bullet.onheartbeat = function() {
+	};
+
+	$('#send').on('click', function() {
+		if (bullet) {
+			bullet.send($('#msg').val());
+		}
+	});
+	
+	function write(msg) {
+		var pre = document.createElement("p");
+    	pre.style.wordWrap = "break-word";
+    	pre.innerHTML = msg;
+    	var output = document.getElementById("status"); 
+    	output.appendChild(pre);
+	};
+</script>
+{% endblock %}

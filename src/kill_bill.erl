@@ -172,11 +172,12 @@ add_action([Action|T], Context, ResourceServer, Config) ->
 get_action_handler(?ACTION_TYPE_BASIC) -> kb_cowboy_action_basic;
 get_action_handler(?ACTION_TYPE_FULL) -> kb_cowboy_action_full.
 
-add_websocket(none, _App, _Context, Config) -> Config;
-add_websocket(_Other, App, Context, Config) ->
+add_websocket(none, _Context, _App, Config) -> Config;
+add_websocket(WebSocket, Context, App, Config) ->
 	lists:append([
-		{string:concat(Context, "websocket"), kb_cowboy_websocket, [
-			{web_app, App}
+		{string:concat(Context, remove_slashs(WebSocket#websocket_config.path)), bullet_handler, [
+			{web_app, App},
+			{handler, kb_bullet_websocket}
 		]}
 	], Config).
 

@@ -15,7 +15,8 @@ start(_Type, _Args) ->
 								 #action_config{prefix = "action",
 												type = ?ACTION_TYPE_FULL,
 												callback=hello_world_action_full}], 
-					  static = #static_config{}
+					  static = #static_config{},
+					  websocket = #websocket_config{}
 			},
 	
 	kill_bill:deploy(hello_world, hello_world_webapp, WebApp),
