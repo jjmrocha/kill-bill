@@ -31,10 +31,10 @@ execute(Context, Dtl, Args) ->
 execute(Context, Dtl, none, Args) -> execute(Context, Dtl, Args);
 execute(Context, Dtl, Dict, Args) ->
 	Fun = fun(Val) ->
-		case dict:find(Val, Dict) of
-			error -> "{" ++ Val ++ "}";
-			{ok, Text} -> Text
-		end
+			case dict:find(Val, Dict) of
+				error -> "{" ++ Val ++ "}";
+				{ok, Text} -> Text
+			end
 	end,
 	Options = [{translation_fun, Fun}],
 	

@@ -53,14 +53,14 @@ init([]) ->
 	ok = application:start(cowboy),
 	
 	error_logger:info_msg("Bang Bang, ~p [~p] Starting...\n", [?MODULE, self()]),
-    {ok, dict:new()}.
+	{ok, dict:new()}.
 
 handle_call({deploy, AppName, Callback, WebApp}, _From, State) ->
 	Reply = case dict:find(AppName, State) of
 		error ->
 			Server = WebApp#web_app.server,
-						
-		  	{ok, App} = kb_webapp_sup:start_webapp(Callback),
+			
+			{ok, App} = kb_webapp_sup:start_webapp(Callback),
 			NState = dict:store(AppName, App, State),
 			Config = get_web_app_config(WebApp, App),
 			
@@ -83,8 +83,8 @@ handle_call({deploy, AppName, Callback, WebApp}, _From, State) ->
 			error_logger:error_msg("Duplicated name ~p\n", [AppName]),
 			NState = State,
 			duplicated
-    end,
-    {reply, Reply, NState};
+	end,
+	{reply, Reply, NState};
 handle_call({call, AppName, Msg}, From, State) ->
 	case dict:find(AppName, State) of
 		error ->
@@ -92,8 +92,8 @@ handle_call({call, AppName, Msg}, From, State) ->
 			{reply, no_webapp, State};
 		{ok, App} ->
 			Fun = fun () ->
-				Reply = kb_webapp:app_call(App, Msg),
-				gen_server:reply(From, Reply)
+					Reply = kb_webapp:app_call(App, Msg),
+					gen_server:reply(From, Reply)
 			end,
 			spawn(Fun),
 			{noreply, State}
@@ -106,18 +106,18 @@ handle_cast({cast, AppName, Msg}, State) ->
 		{ok, App} ->
 			kb_webapp:app_cast(App, Msg)
 	end,
-    {noreply, State}.
+	{noreply, State}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
-    {noreply, State}.
+	{noreply, State}.
 
 terminate(_Reason, _State) ->
 	error_logger:info_msg("Bang Bang, My Baby Shot Me Down\n"),
-    ok.
+	ok.
 
 code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+	{ok, State}.
 
 
 %% ====================================================================
@@ -138,35 +138,35 @@ get_context(Context) ->
 		[] -> "/";
 		Clean -> "/" ++ Clean ++ "/"
 	end.
-			
+
 get_resource_server(none) -> none;
 get_resource_server(Resource) ->
 	{ok, Server} = kb_resource_sup:start_resource_server(Resource),
 	Server.
-  
+
 add_template(none, _Context, _ResourceServer, Config) -> Config;
 add_template(Template, Context, ResourceServer, Config) ->
 	lists:append([
-		{Context, kb_cowboy_toppage, [
-			{resource_server, ResourceServer}, 
-			{template_config, Template},
-			{context, Context}
-		]},
-		{get_template_match(Template, Context), kb_cowboy_template, [
-			{resource_server, ResourceServer},
-			{context, Context}
-		]}
-	], Config).
+			{Context, kb_cowboy_toppage, [
+					{resource_server, ResourceServer}, 
+					{template_config, Template},
+					{context, Context}
+					]},
+			{get_template_match(Template, Context), kb_cowboy_template, [
+					{resource_server, ResourceServer},
+					{context, Context}
+					]}
+			], Config).
 
 add_action([], _ResourceServer, _Context, Config) -> Config;
 add_action([Action|T], Context, ResourceServer, Config) ->
 	NewConfig = lists:append([
-		{get_action_match(Action, Context), get_action_handler(Action#action_config.type), [
-			{resource_server, ResourceServer}, 
-			{action_config, Action},
-			{context, Context}
-		]}
-	], Config),
+				{get_action_match(Action, Context), get_action_handler(Action#action_config.type), [
+						{resource_server, ResourceServer}, 
+						{action_config, Action},
+						{context, Context}
+						]}
+				], Config),
 	add_action(T, Context, ResourceServer, NewConfig).
 
 get_action_handler(?ACTION_TYPE_BASIC) -> kb_cowboy_action_basic;
@@ -175,20 +175,20 @@ get_action_handler(?ACTION_TYPE_FULL) -> kb_cowboy_action_full.
 add_websocket(none, _Context, _App, Config) -> Config;
 add_websocket(WebSocket, Context, App, Config) ->
 	lists:append([
-		{string:concat(Context, remove_slashs(WebSocket#websocket_config.path)), bullet_handler, [
-			{web_app, App},
-			{handler, kb_bullet_websocket}
-		]}
-	], Config).
+			{string:concat(Context, remove_slashs(WebSocket#websocket_config.path)), bullet_handler, [
+					{web_app, App},
+					{handler, kb_bullet_websocket}
+					]}
+			], Config).
 
 add_static(none, _Context, Config) -> Config;
 add_static(Static, Context, Config) ->
 	lists:append([
-		{get_static_match(Static, Context), cowboy_static, [
-			{directory, get_static_dir(Static)},
-			{mimetypes, {fun mimetypes:path_to_mimes/2, default}}
-		]}
-	], Config).
+			{get_static_match(Static, Context), cowboy_static, [
+					{directory, get_static_dir(Static)},
+					{mimetypes, {fun mimetypes:path_to_mimes/2, default}}
+					]}
+			], Config).
 
 get_action_match(Action, Context) ->
 	Context ++ remove_slashs(Action#action_config.prefix) ++ "/[...]".

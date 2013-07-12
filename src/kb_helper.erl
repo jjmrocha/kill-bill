@@ -22,19 +22,19 @@
 %% API functions
 %% ====================================================================
 -export([get_args/1, 
-		 set_cookie/4, 
-		 get_cookie/2,
-		 set_locale/2,
-		 get_context/1]).
+	set_cookie/4, 
+	get_cookie/2,
+	set_locale/2,
+	get_context/1]).
 
 get_args(Req) when is_record(Req, kb_request) ->
 	case Req#kb_request.method of
 		<<"GET">> ->
-				{QSVals, Req1} = cowboy_req:qs_vals(Req#kb_request.data),
-				{QSVals, Req#kb_request{data=Req1}};
+			{QSVals, Req1} = cowboy_req:qs_vals(Req#kb_request.data),
+			{QSVals, Req#kb_request{data=Req1}};
 		<<"POST">> ->
-				{ok, BodyQS, Req1} = cowboy_req:body_qs(Req#kb_request.data),
-				{BodyQS, Req#kb_request{data=Req1}};
+			{ok, BodyQS, Req1} = cowboy_req:body_qs(Req#kb_request.data),
+			{BodyQS, Req#kb_request{data=Req1}};
 		_ -> {[], Req}
 	end.
 

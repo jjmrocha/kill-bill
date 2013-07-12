@@ -41,25 +41,25 @@ add_locale(Server, Locale, Resource) ->
 %% ====================================================================
 
 init([Config]) ->
-    {ok, load_resources(Config, dict:new())}.
+	{ok, load_resources(Config, dict:new())}.
 
 handle_call({resource, Locales}, From, State) ->
 	run(Locales, From, State),
-    {noreply, State}.
+	{noreply, State}.
 
 handle_cast({add_locale, Locale, Resource}, State) ->
 	Store = dict:store(Locale, Resource, State),
-    {noreply, Store}.
+	{noreply, Store}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
-    {noreply, State}.
+	{noreply, State}.
 
 terminate(_Reason, _State) ->
-    ok.
+	ok.
 
 code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+	{ok, State}.
 
 
 %% ====================================================================
@@ -95,7 +95,7 @@ convert_to_dict(ValueList) ->
 load_dict([], Dict) -> Dict;
 load_dict([{Key, Value}|Tail], Dict) ->
 	load_dict(Tail, dict:store(Key, Value, Dict)).
-	
+
 get_locale_from_filename(Basename, Extension, Filename) ->
 	NoBasename = string:substr(Filename, string:len(Basename) + 1),
 	NoExtension = string:substr(NoBasename, 1, string:len(NoBasename) - string:len(Extension)),
@@ -115,12 +115,12 @@ get_locale_from_filename(Basename, Extension, Filename) ->
 run(Locales, From, Store) ->
 	Server = self(),
 	Fun = fun() ->
-		Reply = case dict:size(Store) of
-					0 -> dict:new();
-					1 -> find(Server, [], Store);
-					_ -> find(Server, Locales, Store)
-				end,
-		gen_server:reply(From, Reply)
+			Reply = case dict:size(Store) of
+				0 -> dict:new();
+				1 -> find(Server, [], Store);
+				_ -> find(Server, Locales, Store)
+			end,
+			gen_server:reply(From, Reply)
 	end,
 	spawn(Fun).
 
@@ -142,4 +142,4 @@ find(Server, [Locale|Tail], Store) ->
 					find(Server, Tail, Store)
 			end
 	end.
-				  
+

@@ -19,10 +19,10 @@
 -export([behaviour_info/1]).
 
 behaviour_info(callbacks) ->
-    [
-	 	% INPUT: Method, Path, Request
+	[
+		% INPUT: Method, Path, Request
 		% OUTPUT: {{html, Value}, Request} | {{json, Value}, Request} | {{dtl, Template, Args}, Request} | {{redirect, Url}, Request} | {{raw, Status, Headers, Body}, Request}
-	    {handle, 3}
-    ];
+		{handle, 3}
+	];
 behaviour_info(_Other) ->
-    undefined.
+	undefined.

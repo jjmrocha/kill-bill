@@ -45,7 +45,7 @@ handle({redirect, Url}, Context, ResourceServer, Req) when is_list(Url) ->
 	handle({redirect, list_to_binary(Url)}, Context, ResourceServer, Req);
 handle({redirect, Url}, Context, ResourceServer, Req) when is_binary(Url) -> 
 	handle({raw, 302, [{<<"Location">>, Url}], []}, Context, ResourceServer, Req);
-	
+
 handle({raw, Status, Headers, Body}, _Context, _ResourceServer, Req) -> 
 	{ok, Req2} = cowboy_req:reply(Status, Headers, Body, Req),
 	Req2.

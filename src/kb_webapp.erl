@@ -59,14 +59,14 @@ init([Callback]) ->
 	case Callback:handle_init() of
 		{ok, Status} ->
 			error_logger:info_msg("Starting WebApp callback ~p [~p]...\n", [Callback, self()]),
-    		{ok, #state{callback=Callback, app_state=Status}};
+			{ok, #state{callback=Callback, app_state=Status}};
 		{stop, Reason} ->
 			error_logger:error_msg("Callback ~p not starting, because [~p]...\n", [Callback, Reason]),
 			{stop, Reason}
 	end.
 
 handle_call({?ORIGIN_APP, Msg}, _From, State=#state{callback=Callback, app_state=Status}) ->
-    case Callback:handle_app_call(Msg, Status) of
+	case Callback:handle_app_call(Msg, Status) of
 		{reply, Reply, NStatus} -> {reply, Reply, State#state{app_state=NStatus}};
 		{stop, Reason, NStatus} -> {stop, Reason, State#state{app_state=NStatus}}
 	end;
@@ -105,14 +105,14 @@ handle_cast({?ORIGIN_APP, Msg}, State=#state{callback=Callback, app_state=Status
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
-    {noreply, State}.
+	{noreply, State}.
 
 terminate(_Reason, #state{callback=Callback, app_state=Status}) ->
 	Callback:handle_terminate(Status),
-    ok.
+	ok.
 
 code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+	{ok, State}.
 
 
 %% ====================================================================
