@@ -34,4 +34,4 @@ info(Msg, Req, WebApp) ->
 
 terminate(_Req, WebApp) ->
 	kb_webapp:client_disconnect(WebApp),
-    ok.
+	ok.

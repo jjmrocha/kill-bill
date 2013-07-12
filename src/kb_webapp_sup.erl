@@ -32,6 +32,6 @@ start_webapp(Callback) ->
 init([]) ->
 	process_flag(trap_exit, true),
 	error_logger:info_msg("~p [~p] Starting...\n", [?MODULE, self()]),
-
-    WebApp = {kb_webapp, {kb_webapp, start_link, []}, temporary, 2000, worker, [kb_webapp]},
-    {ok,{{simple_one_for_one, 10, 60}, [WebApp]}}.
+	
+	WebApp = {kb_webapp, {kb_webapp, start_link, []}, temporary, 2000, worker, [kb_webapp]},
+	{ok,{{simple_one_for_one, 10, 60}, [WebApp]}}.

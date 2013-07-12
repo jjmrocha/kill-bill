@@ -33,13 +33,13 @@ handle(Req, {ResourceServer, Handler, Context}) ->
 	{Path, Req2} = cowboy_req:path_info(Req1),
 	Req4 = case Method of
 		<<"GET">> ->
-				{QSVals, Req3} = cowboy_req:qs_vals(Req2),
-				Response = Handler:get(Path, QSVals),
-				kb_response:handle(Response, Context, ResourceServer, Req3);
+			{QSVals, Req3} = cowboy_req:qs_vals(Req2),
+			Response = Handler:get(Path, QSVals),
+			kb_response:handle(Response, Context, ResourceServer, Req3);
 		<<"POST">> ->
-				{ok, BodyQS, Req3} = cowboy_req:body_qs(Req2),
-				Response = Handler:post(Path, BodyQS),			
-				kb_response:handle(Response, Context, ResourceServer, Req3);
+			{ok, BodyQS, Req3} = cowboy_req:body_qs(Req2),
+			Response = Handler:post(Path, BodyQS),			
+			kb_response:handle(Response, Context, ResourceServer, Req3);
 		_ -> 
 			Output = io_lib:format("Method [~p] not suported", [Method]),
 			kb_response:handle({raw, 501, [], Output}, Context, ResourceServer, Req2)
