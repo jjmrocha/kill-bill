@@ -2,8 +2,7 @@
 {"layout_title", "Exemplos Kill Bill"},
 
 {"index_greetings", "Ol&aacute; Mundo!"},
-{"index_full", "Action Handler Completo"},
-{"index_basic", "Action Handler Basico"},
+{"index_full", "Action Handler"},
 {"index_redirect", "Ir para o Google"},
 {"index_json", "Devolver JSON"},
 {"index_locale", "Mudar o idioma para &quot;en&quot;"},

@@ -17,9 +17,6 @@
 -define(PROTOCOL_HTTP, http).
 -define(PROTOCOL_HTTPS, https).
 
--define(ACTION_TYPE_BASIC, action_basic).
--define(ACTION_TYPE_FULL, action_full).
-
 -record(server_config, {
 				host = '_',
 				protocol = ?PROTOCOL_HTTP,
@@ -56,8 +53,7 @@
 		).
 		
 -record(action_config, { 
-				prefix = "service",
-				type = ?ACTION_TYPE_BASIC,
+				prefix = "action",
 				callback = none							
 			}
 		).		
@@ -80,6 +76,7 @@
 		
 -record(kb_request, {
 				context,
+				resource_server,
 				method,
 				data
 			}

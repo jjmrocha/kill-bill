@@ -45,6 +45,10 @@ call(AppName, Msg) when is_atom(AppName) ->
 %% Behavioural functions 
 %% ====================================================================
 
+-record(server, {config, apps = []}).
+-record(app, {config, context, webclient, resource}).
+-record(status, {servers, apps}).
+
 init([]) ->
 	process_flag(trap_exit, true),
 	
@@ -161,16 +165,13 @@ add_template(Template, Context, ResourceServer, Config) ->
 add_action([], _ResourceServer, _Context, Config) -> Config;
 add_action([Action|T], Context, ResourceServer, Config) ->
 	NewConfig = lists:append([
-				{get_action_match(Action, Context), get_action_handler(Action#action_config.type), [
+				{get_action_match(Action, Context), kb_cowboy_action, [
 						{resource_server, ResourceServer}, 
 						{action_config, Action},
 						{context, Context}
 						]}
 				], Config),
 	add_action(T, Context, ResourceServer, NewConfig).
-
-get_action_handler(?ACTION_TYPE_BASIC) -> kb_cowboy_action_basic;
-get_action_handler(?ACTION_TYPE_FULL) -> kb_cowboy_action_full.
 
 add_websocket(none, _Context, _App, Config) -> Config;
 add_websocket(WebSocket, Context, App, Config) ->

@@ -29,7 +29,8 @@ init(_Transport, Req, Opts) ->
 	{ok, Req, {ResourceServer, TemplateConfig#template_config.top_page, list_to_binary(Context)}}.
 
 handle(Req, {ResourceServer, TopPage, Context}) ->
-	Req2 = kb_template_util:execute(Context, TopPage, ResourceServer, Req),
+	Request = #kb_request{context=Context, resource_server=ResourceServer, data=Req},
+	Req2 = kb_template_util:execute(TopPage, Request),
 	{ok, Req2, {ResourceServer, TopPage, Context}}.
 
 terminate(_Reason, _Req, _State) ->

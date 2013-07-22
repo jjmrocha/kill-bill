@@ -12,15 +12,8 @@
 <a href="{{ context }}action/locale/{% trans "index_new_locale" %}">{% trans "index_locale" %}</a><br>
 
 <br>
-<h1>{% trans "index_basic" %}</h1>
-<a href="{{ context }}service/form">{% trans "form_title" %}</a><br>
-<a href="{{ context }}service/args?name=Joaquim&surname=Rocha">{% trans "args_list_title" %}</a><br>
-<a href="{{ context }}service/json/1/create?name=Joe&surname=Armstrong">{% trans "index_json" %}</a><br>
-<a href="{{ context }}service/google">{% trans "index_redirect" %}</a><br>
-
-<br>
 <h1>{% trans "index_websocket" %}</h1>
 <a href="{{ context }}page/websocket">{% trans "index_websocket_page" %}</a><br>
-<a href="{{ context }}service/client?msg=Hello">{% trans "index_websocket_send" %}</a><br>
+<a href="{{ context }}action/client?msg=Hello">{% trans "index_websocket_send" %}</a><br>
 
 {% endblock %}
