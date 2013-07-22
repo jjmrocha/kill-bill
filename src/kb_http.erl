@@ -16,12 +16,14 @@
 
 -module(kb_http).
 
+-include("kill_bill.hlr").
+
 -define(COOKIE_CHOSEN_LANGUAGE, <<"kb-chosen-language">>).
 
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([get_accept_languages/1, set_chosen_language/3, set_cookie/5, get_dict/2]).
+-export([get_accept_languages/1, set_chosen_language/3, set_cookie/5, get_dict/1]).
 
 get_accept_languages(Req) ->
 	{ChosenLanguage, Req2} = cowboy_req:cookie(?COOKIE_CHOSEN_LANGUAGE, Req),
@@ -45,8 +47,8 @@ set_chosen_language(Path, Locale, Req) when is_tuple(Locale) ->
 	end,
 	set_cookie(Path, ?COOKIE_CHOSEN_LANGUAGE, BinLocale, none, Req).
 
-get_dict(none, _Req) -> none;
-get_dict(ResourceServer, Req) ->
+get_dict(#kb_request{resource_server=none}) -> none;
+get_dict(#kb_request{resource_server=ResourceServer, data=Req}) ->
 	Locales = get_accept_languages(Req),
 	kb_resource:get_resource(ResourceServer, Locales).
 

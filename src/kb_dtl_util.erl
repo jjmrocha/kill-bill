@@ -16,20 +16,18 @@
 
 -module(kb_dtl_util).
 
+-include("kill_bill.hlr").
+
 %% ====================================================================
 %% API functions
 %% ====================================================================
 -export([execute/4, execute/3]).
 
-execute(Context, Dtl, Args) -> 
-	try render(Context, Dtl, Args) of
-		Result -> Result
-	catch
-		_Type:_Error -> {error, not_found}
-	end. 
+execute(Dtl, Args, #kb_request{context=Context}) -> 
+	execute_dtl(Dtl, Args, [], Context). 
 
-execute(Context, Dtl, none, Args) -> execute(Context, Dtl, Args);
-execute(Context, Dtl, Dict, Args) ->
+execute(Dtl, none, Args, Req) -> execute(Dtl, Args, Req);
+execute(Dtl, Dict, Args, #kb_request{context=Context}) ->
 	Fun = fun(Val) ->
 			case dict:find(Val, Dict) of
 				error -> "{" ++ Val ++ "}";
@@ -37,28 +35,22 @@ execute(Context, Dtl, Dict, Args) ->
 			end
 	end,
 	Options = [{translation_fun, Fun}],
-	
-	try render(Context, Dtl, Args, Options) of
-		Result -> Result
-	catch
-		_Type:_Error -> {error, not_found}
-	end. 
+	execute_dtl(Dtl, Args, Options, Context). 
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
 
-render(Context, Dtl, Args) ->
-	case Dtl:render(add_context(Context, Args)) of
+execute_dtl(Dtl, Args, Options, Context) -> 
+	Args1 = lists:append([{context, Context}], Args),
+	try render(Dtl, Args1, Options) of
+		Result -> Result
+	catch
+		_Type:_Error -> {error, not_found}
+	end. 
+
+render(Dtl, Args, Options) ->
+	case Dtl:render(Args, Options) of
 		{ok, IOList} -> {ok, IOList};
 		{error, Err} -> {error, Err}
 	end.
-
-render(Context, Dtl, Args, Options) ->
-	case Dtl:render(add_context(Context, Args), Options) of
-		{ok, IOList} -> {ok, IOList};
-		{error, Err} -> {error, Err}
-	end.
-
-add_context(Context, Args) ->
-	lists:append([{context, Context}], Args).

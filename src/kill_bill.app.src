@@ -1,17 +1,52 @@
-{application, kill_bill,
-[
-{description, "Kill Bill - Web Application Server"},
-{vsn, "1.0"},
-{modules, [kill_bill_app, kill_bill_sup, kill_bill
-          ]},
-{registered, [  kill_bill, 
-				kb_webapp_sup, 
-				kb_template_sup
-             ]},
-{applications, [kernel, 
-                stdlib
-               ]},
-{mod, {kill_bill_app, []}},
-{start_phases, []}
-]
-}.
+%%
+%% Copyright 2013 Joaquim Rocha
+%% 
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%%   http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
+%%
+
+{application, kill_bill, [
+	{description, "Kill Bill - Web Application Server"},
+	{vsn, "0.5.0"},
+	{modules, [
+		kb_action_handler,
+		kb_bullet_websocket,
+		kb_cowboy_action,
+		kb_cowboy_template,
+		kb_cowboy_toppage,
+		kb_dtl_util,
+		kb_helper,
+		kb_http,
+		kb_json,
+		kb_resource,
+		kb_resource_sup,
+		kb_response,
+		kb_template_util,
+		kb_util,
+		kb_webapp,
+		kb_webapp_handler,
+		kb_webapp_sup,
+		kill_bill_app,
+		kill_bill,
+		kill_bill_sup			
+	]},
+	{registered, [ 
+		kill_bill, 
+		kb_webapp_sup, 
+		kb_template_sup
+	]},
+	{applications, [
+		kernel, 
+		stdlib
+	]},
+	{mod, {kill_bill_app, []}}
+]}.

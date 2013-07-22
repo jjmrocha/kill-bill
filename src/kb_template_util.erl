@@ -21,11 +21,11 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([execute/4]).
+-export([execute/2]).
 
-execute(Context, Path, ResourceServer, Req) -> 
+execute(Path, Req) -> 
 	Dtl = get_dtl(Path),
-	kb_response:handle({dtl, Dtl, []}, Context, ResourceServer, Req).
+	kb_response:handle({dtl, Dtl, [], Req}).
 
 %% ====================================================================
 %% Internal functions

@@ -16,6 +16,8 @@
 
 -module(kb_cowboy_template).
 
+-include("kill_bill.hlr").
+
 -behaviour(cowboy_http_handler).
 
 -export([init/3, handle/2, terminate/3]).
@@ -28,7 +30,8 @@ init(_Transport, Req, Opts) ->
 handle(Req, {ResourceServer, Context}) ->
 	{Path, Req1} = cowboy_req:path_info(Req),
 	NewPath = join(Path, <<>>),
-	Req2 = kb_template_util:execute(Context, NewPath, ResourceServer, Req1),
+	Request = #kb_request{context=Context, resource_server=ResourceServer, data=Req1},
+	Req2 = kb_template_util:execute(NewPath, Request),
 	{ok, Req2, {ResourceServer, Context}}.
 
 terminate(_Reason, _Req, _State) ->
