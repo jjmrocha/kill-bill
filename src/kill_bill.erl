@@ -25,8 +25,8 @@
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([start_link/0]).
--export([config_server/1, start_server/1, stop_server/1]).
--export([deploy/2, undeploy/1]).
+-export([config_server/1, start_server/1, stop_server/1, get_server_list/0]).
+-export([deploy/2, undeploy/1, get_webapp_list/0]).
 -export([cast_webclient/3, call_webclient/3]).
 
 %% ====================================================================
@@ -51,6 +51,9 @@ start_server(ServerName) when is_atom(ServerName) ->
 stop_server(ServerName) when is_atom(ServerName) ->
 	gen_server:call(?MODULE, {stop_server, ServerName}).
 
+get_server_list() ->
+	gen_server:call(?MODULE, {get_server_list}).
+
 deploy(ServerName, {webapp_config, WebAppName, Config}) when is_atom(ServerName) andalso is_atom(WebAppName) andalso is_list(Config) ->
 	gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, Config}});
 deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) ->
@@ -62,6 +65,9 @@ deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) 
 
 undeploy(WebAppName) when is_atom(WebAppName) ->
 	gen_server:call(?MODULE, {undeploy, WebAppName}).
+
+get_webapp_list() ->
+	gen_server:call(?MODULE, {get_webapp_list}).
 
 cast_webclient(WebAppName, WebclientName, Msg) when is_atom(WebAppName) andalso is_atom(WebclientName) ->
 	gen_server:cast(?MODULE, {cast_webclient, WebAppName, WebclientName, Msg}).
@@ -89,10 +95,15 @@ handle_call({config_server, ServerName, Config}, _From, State=#status{servers=Se
 			NState = State#status{servers=NServers},
 			error_logger:info_msg("Server ~p configured: ~p\n", [ServerName, Config]),
 			ok;
+		{ok, #server{running=false, webapps=WebApps}} ->
+			NServers = dict:store(ServerName, #server{config=Config, webapps=WebApps}, Servers),
+			NState = State#status{servers=NServers},
+			error_logger:info_msg("Server ~p reconfigured: ~p\n", [ServerName, Config]),
+			ok;		
 		{ok, _Server} ->
-			error_logger:error_msg("Duplicated server ~p\n", [ServerName]),
+			error_logger:error_msg("Server ~p is running\n", [ServerName]),
 			NState = State,
-			duplicated
+			server_running
 	end,
 	{reply, Reply, NState};
 handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
@@ -151,6 +162,16 @@ handle_call({stop_server, ServerName}, _From, State=#status{servers=Servers}) ->
 			ok
 	end,
 	{reply, Reply, NState};
+handle_call({get_server_list}, From, State=#status{servers=Servers}) ->
+	Fun = fun() ->
+		Rep = fun(ServerName, #server{running=Run, webapps=WebApps}, Acc) ->
+					  [{ServerName, Run, WebApps} | Acc]
+			  end,
+		Reply = dict:fold(Rep, [], Servers),
+		gen_server:reply(From, Reply)
+	end,
+	spawn(Fun),
+	{noreply, State};
 handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
 	Reply = case dict:find(WebAppName, Webapps) of
 		error ->
@@ -211,13 +232,23 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 			end,
 			
 			stop_resource_server(WebApp#webapp.resource),
-			stop_webclient_server(WebApp#webapp.webclients),
+			stop_webclient_server(dict:to_list(WebApp#webapp.webclients)),
 			
 			error_logger:info_msg("WebApp ~p was undeployed from server ~p\n", [WebAppName, WebApp#webapp.server]),
 			NState = State#status{servers=NServers, webapps=NWebapps},
 			ok
 	end,
 	{reply, Reply, NState};
+handle_call({get_webapp_list}, From, State=#status{webapps=Webapps}) ->
+	Fun = fun() ->
+		Rep = fun(WebAppName, #webapp{server=ServerName}, Acc) ->
+					  [{WebAppName, ServerName} | Acc]
+			  end,
+		Reply = dict:fold(Rep, [], Webapps),
+		gen_server:reply(From, Reply)
+	end,
+	spawn(Fun),
+	{noreply, State};  
 handle_call({call_webclient, WebAppName, WebclientName, Msg}, From, State=#status{webapps=Webapps}) ->
 	case dict:find(WebAppName, Webapps) of
 		error ->
@@ -316,7 +347,7 @@ get_webclient_server([{WebClient, _prefix, Callback}| T], Dict) ->
 	get_webclient_server(T, dict:store(WebClient, Pid, Dict)).
 
 stop_webclient_server([]) -> ok;
-stop_webclient_server([Pid|T]) -> 
+stop_webclient_server([{_WebClient, Pid}|T]) -> 
 	kb_webclient:stop(Pid),
 	stop_webclient_server(T).
 

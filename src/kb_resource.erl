@@ -52,7 +52,7 @@ handle_cast({add_locale, Locale, Resource}, State) ->
 	Store = dict:store(Locale, Resource, State),
 	{noreply, Store};
 handle_cast({stop}, State) ->
-	{stop, undeploy, State}.
+	{stop, normal, State}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
