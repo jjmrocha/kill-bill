@@ -106,7 +106,7 @@ handle_cast({?ORIGIN_APP, Msg}, State=#state{callback=Callback, app_state=Status
 			{stop, Reason, State#state{app_state=NStatus}}
 	end;
 handle_cast({stop}, State) ->
-	{stop, undeploy, State}.
+	{stop, normal, State}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
