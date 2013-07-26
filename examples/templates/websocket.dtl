@@ -3,6 +3,7 @@
 {% block header %}
 <script	src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script src="{{ context }}/js/bullet.js"></script>
+<script src="{{ context }}/js/webclient.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -19,35 +20,20 @@
 </p>
 
 <script type="text/javascript">
-	var bullet = $.bullet("ws://127.0.0.1:8080{{ context }}websocket", {});
-
-	bullet.onopen = function() {
-		write('online');
+	var onMessage = function (msg) {
+			var pre = document.createElement("p");
+	    	pre.style.wordWrap = "break-word";
+	    	pre.innerHTML = msg;
+	    	var output = document.getElementById("status"); 
+	    	output.appendChild(pre);
 	};
 
-	bullet.onclose = bullet.ondisconnect = function() {
-		write('offline');
-	};
-
-	bullet.onmessage = function(e) {
-		write(e.data);
-	};
-
-	bullet.onheartbeat = function() {
-	};
+	var webclient = new WebClient("ws://127.0.0.1:8080{{ context }}websocket", onMessage);
 
 	$('#send').on('click', function() {
-		if (bullet) {
-			bullet.send($('#msg').val());
+		if (webclient) {
+			webclient.send($('#msg').val());
 		}
 	});
-	
-	function write(msg) {
-		var pre = document.createElement("p");
-    	pre.style.wordWrap = "break-word";
-    	pre.innerHTML = msg;
-    	var output = document.getElementById("status"); 
-    	output.appendChild(pre);
-	};
 </script>
 {% endblock %}

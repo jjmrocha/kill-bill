@@ -1,0 +1,7 @@
+{% extends "layout.dtl" %}
+
+{% block content %}
+
+<h1>{% trans "world_greetings" %}</h1>
+
+{% endblock %}

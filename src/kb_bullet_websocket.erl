@@ -19,19 +19,21 @@
 -export([init/4, stream/3, info/3, terminate/2]).
 
 init(_Transport, Req, Opts, _Active) ->
-	WebApp = proplists:get_value(web_app, Opts),
-	case kb_webapp:client_connect(WebApp) of
-		ok -> {ok, Req, WebApp};
+	Webclient = proplists:get_value(webclient_app, Opts),
+	case kb_webclient:client_connect(Webclient) of
+		ok -> {ok, Req, Webclient};
 		refuse -> {shutdown, Req} 
 	end.
 
-stream(Msg, Req, WebApp) ->
-	kb_webapp:client_cast(WebApp, Msg),
-	{ok, Req, WebApp}.
+stream(<<"kb-ping">>, Req, Webclient) ->
+	{reply, <<"kb-pong">>, Req, Webclient};
+stream(Msg, Req, Webclient) ->
+	kb_webclient:client_cast(Webclient, Msg),
+	{ok, Req, Webclient}.
 
-info(Msg, Req, WebApp) ->
-	{reply, Msg, Req, WebApp}.
+info(Msg, Req, Webclient) ->
+	{reply, Msg, Req, Webclient}.
 
-terminate(_Req, WebApp) ->
-	kb_webapp:client_disconnect(WebApp),
+terminate(_Req, Webclient) ->
+	kb_webclient:client_disconnect(Webclient),
 	ok.

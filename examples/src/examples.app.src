@@ -1,0 +1,19 @@
+{application, examples, [
+	{description, "Kill-Bill examples."},
+	{vsn, "1"},
+	{modules, [
+		examples_action, 
+		examples_app, 
+		examples_sup,
+		examples_webclient,
+		examples
+	]},
+	{registered, [examples_sup]},
+	{applications, [
+		kernel,
+		stdlib,
+		kill_bill
+	]},
+	{mod, {examples_app, []}},
+	{env, []}
+]}.

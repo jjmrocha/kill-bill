@@ -14,7 +14,7 @@
 %% limitations under the License.
 %%
 
--module(kb_webapp).
+-module(kb_webclient).
 
 -behaviour(gen_server).
 
@@ -30,25 +30,28 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([start_link/1, app_call/2, app_cast/2, client_connect/1, client_disconnect/1, client_cast/2]).
+-export([start_link/1, stop/1, app_call/2, app_cast/2, client_connect/1, client_disconnect/1, client_cast/2]).
 
 start_link(Callback) ->
 	gen_server:start_link(?MODULE, [Callback], []).
 
-app_call(WebApp, Msg) ->
-	gen_server:call(WebApp, {?ORIGIN_APP, Msg}).
+stop(Webclient) ->
+	gen_server:cast(Webclient, {stop}).
 
-app_cast(WebApp, Msg) ->
-	gen_server:cast(WebApp, {?ORIGIN_APP, Msg}).
+app_call(Webclient, Msg) ->
+	gen_server:call(Webclient, {?ORIGIN_APP, Msg}).
 
-client_connect(WebApp) ->
-	gen_server:call(WebApp, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_CONNECT}).
+app_cast(Webclient, Msg) ->
+	gen_server:cast(Webclient, {?ORIGIN_APP, Msg}).
 
-client_disconnect(WebApp) ->
-	gen_server:cast(WebApp, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_DISCONNECT}).
+client_connect(Webclient) ->
+	gen_server:call(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_CONNECT}).
 
-client_cast(WebApp, Msg) ->
-	gen_server:cast(WebApp, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_INFO, Msg}).
+client_disconnect(Webclient) ->
+	gen_server:cast(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_DISCONNECT}).
+
+client_cast(Webclient, Msg) ->
+	gen_server:cast(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_INFO, Msg}).
 
 %% ====================================================================
 %% Behavioural functions 
@@ -58,7 +61,7 @@ client_cast(WebApp, Msg) ->
 init([Callback]) ->
 	case Callback:handle_init() of
 		{ok, Status} ->
-			error_logger:info_msg("Starting WebApp callback ~p [~p]...\n", [Callback, self()]),
+			error_logger:info_msg("Starting WebClient callback ~p [~p]...\n", [Callback, self()]),
 			{ok, #state{callback=Callback, app_state=Status}};
 		{stop, Reason} ->
 			error_logger:error_msg("Callback ~p not starting, because [~p]...\n", [Callback, Reason]),
@@ -101,7 +104,9 @@ handle_cast({?ORIGIN_APP, Msg}, State=#state{callback=Callback, app_state=Status
 		{stop, Reason, NStatus} -> 
 			error_logger:error_msg("Callback ~p stopping, because [~p]...\n", [Callback, Reason]),
 			{stop, Reason, State#state{app_state=NStatus}}
-	end.
+	end;
+handle_cast({stop}, State) ->
+	{stop, undeploy, State}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),

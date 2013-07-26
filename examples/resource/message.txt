@@ -1,7 +1,9 @@
 [
 {"layout_title", "Kill Bill Examples"},
 
-{"index_greetings", "Hello world!"},
+{"world_greetings", "Hello world!"},
+
+{"index_greetings", "Examples"},
 {"index_full", "Action Handler"},
 {"index_redirect", "Go to Google"},
 {"index_json", "JSON output"},

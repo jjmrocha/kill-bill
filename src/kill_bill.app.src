@@ -16,7 +16,7 @@
 
 {application, kill_bill, [
 	{description, "Kill Bill - Web Application Server"},
-	{vsn, "0.5.0"},
+	{vsn, "0.6.0"},
 	{modules, [
 		kb_action_handler,
 		kb_bullet_websocket,
@@ -24,6 +24,7 @@
 		kb_cowboy_template,
 		kb_cowboy_toppage,
 		kb_dtl_util,
+		kb_dummy_toppage,
 		kb_helper,
 		kb_http,
 		kb_json,
@@ -32,9 +33,9 @@
 		kb_response,
 		kb_template_util,
 		kb_util,
-		kb_webapp,
-		kb_webapp_handler,
-		kb_webapp_sup,
+		kb_webclient,
+		kb_webclient_handler,
+		kb_webclient_sup,
 		kill_bill_app,
 		kill_bill,
 		kill_bill_sup			
@@ -46,7 +47,10 @@
 	]},
 	{applications, [
 		kernel, 
-		stdlib
+		stdlib,
+		crypto,
+		ranch,
+		cowboy
 	]},
 	{mod, {kill_bill_app, []}}
 ]}.

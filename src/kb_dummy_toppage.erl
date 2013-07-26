@@ -14,24 +14,21 @@
 %% limitations under the License.
 %%
 
--module(kb_webapp_sup).
+-module(kb_dummy_toppage).
 
--behaviour(supervisor).
+-behaviour(cowboy_http_handler).
 
--export([init/1]).
--export([start_link/0, start_webapp/1]).
+-export([init/3, handle/2, terminate/3]).
 
--define(SERVER, {local, ?MODULE}).
+init(_Transport, Req, Opts) ->
+	ServerName = proplists:get_value(server, Opts),
+	Host = proplists:get_value(host, Opts),
+	{ok, Req, {ServerName, Host}}.
 
-start_link() ->
-	supervisor:start_link(?SERVER, ?MODULE, []).
+handle(Req, {ServerName, Host}) ->
+	Output = io_lib:format("Kill Bill server ~p running for host [~p]", [ServerName, Host]),
+	{ok, Req2} = cowboy_req:reply(200, [], Output, Req),
+	{ok, Req2, {ServerName, Host}}.
 
-start_webapp(Callback) ->
-	supervisor:start_child(?MODULE, [Callback]).
-
-init([]) ->
-	process_flag(trap_exit, true),
-	error_logger:info_msg("~p [~p] Starting...\n", [?MODULE, self()]),
-	
-	WebApp = {kb_webapp, {kb_webapp, start_link, []}, temporary, 2000, worker, [kb_webapp]},
-	{ok,{{simple_one_for_one, 10, 60}, [WebApp]}}.
+terminate(_Reason, _Req, _State) ->
+	ok.

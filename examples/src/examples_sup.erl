@@ -1,4 +1,4 @@
--module(hello_world_sup).
+-module(examples_sup).
 
 -behaviour(supervisor).
 
