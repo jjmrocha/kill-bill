@@ -1,4 +1,4 @@
--module(hello_world_action).
+-module(examples_action).
 
 -behaviour(kb_action_handler).
 
@@ -38,9 +38,8 @@ handle(_Method, [<<"locale">>, Language], Req) ->
 handle(_Method, [<<"client">>], Req) ->
 	{Args, Req1} = kb_helper:get_args(Req),
 	Msg = proplists:get_value(<<"msg">>, Args, <<"Hello 2">>),
-	kill_bill:call(hello_world, Msg), 
-	Output = io_lib:format("<html><body>Done!</body></html>"),
-	{html, Output, Req1};
+	kill_bill:cast_webclient(examples, client, Msg), 
+	{html, "<html><body>Done!</body></html>", Req1};
 
 handle(_Method, _Path, Req) ->
 	{raw, 404, [], "Not found!", Req}.

@@ -18,17 +18,18 @@
 
 -behaviour(gen_server).
 
--include("kill_bill.hlr").
-
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([start_link/1, get_resource/2, add_locale/3]).
+-export([start_link/1, stop/1, get_resource/2, add_locale/3]).
 
 start_link(Config) ->
 	gen_server:start_link(?MODULE, [Config], []).
+
+stop(Server) ->
+	gen_server:cast(Server, {stop}).
 
 get_resource(Server, Locales) ->
 	gen_server:call(Server, {resource, Locales}).
@@ -49,7 +50,9 @@ handle_call({resource, Locales}, From, State) ->
 
 handle_cast({add_locale, Locale, Resource}, State) ->
 	Store = dict:store(Locale, Resource, State),
-	{noreply, Store}.
+	{noreply, Store};
+handle_cast({stop}, State) ->
+	{stop, undeploy, State}.
 
 handle_info(Info, State) ->
 	error_logger:info_msg("handle_info(~p)\n", [Info]),
@@ -67,10 +70,14 @@ code_change(_OldVsn, State, _Extra) ->
 %% ====================================================================
 
 load_resources(Config, Store) -> 
-	Extension = "." ++ kb_util:remove_if_starts_with(Config#resource_config.file_extension, "."),
-	Wildcard = Config#resource_config.base_name ++ "*" ++ Extension,
-	Files = filelib:wildcard(Wildcard, Config#resource_config.file_dir),
-	add_resources(Config#resource_config.file_dir, Config#resource_config.base_name, Extension, Files, Store).
+	BaseName = proplists:get_value(base_name, Config, "message"),
+	FileExtension = proplists:get_value(file_extension, Config, ".txt"),
+	FileDir = proplists:get_value(file_dir, Config, "./resource"),
+	
+	Extension = "." ++ kb_util:remove_if_starts_with(FileExtension, "."),
+	Wildcard = BaseName ++ "*" ++ Extension,
+	Files = filelib:wildcard(Wildcard, FileDir),
+	add_resources(FileDir, BaseName, Extension, Files, Store).
 
 add_resources(_Dir, _Basename, _Extension, [], Store) -> Store;
 add_resources(Dir, Basename, Extension, [Filename|Tail], Store) ->

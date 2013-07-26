@@ -14,10 +14,24 @@
 %% limitations under the License.
 %%
 
--record(kb_request, {
-				context,
-				resource_server,
-				method,
-				data
-			}
-		).
+-module(kb_webclient_sup).
+
+-behaviour(supervisor).
+
+-export([init/1]).
+-export([start_link/0, start_webclient/1]).
+
+-define(SERVER, {local, ?MODULE}).
+
+start_link() ->
+	supervisor:start_link(?SERVER, ?MODULE, []).
+
+start_webclient(Callback) ->
+	supervisor:start_child(?MODULE, [Callback]).
+
+init([]) ->
+	process_flag(trap_exit, true),
+	error_logger:info_msg("~p [~p] Starting...\n", [?MODULE, self()]),
+	
+	WebClient = {kb_webclient, {kb_webclient, start_link, []}, temporary, 2000, worker, [kb_webclient]},
+	{ok,{{simple_one_for_one, 10, 60}, [WebClient]}}.

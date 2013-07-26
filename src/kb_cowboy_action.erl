@@ -24,17 +24,17 @@
 
 init(_Transport, Req, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
-	ActionConfig = proplists:get_value(action_config, Opts),
+	Callback = proplists:get_value(callback, Opts),
 	Context = proplists:get_value(context, Opts),
-	{ok, Req, {ResourceServer, ActionConfig#action_config.callback, list_to_binary(Context)}}.
+	{ok, Req, {ResourceServer, Callback, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, Handler, Context}) ->
+handle(Req, {ResourceServer, Callback, Context}) ->
 	{Method, Req1} = cowboy_req:method(Req),
 	{Path, Req2} = cowboy_req:path_info(Req1),
 	Request = #kb_request{context=Context, resource_server=ResourceServer, method=Method, data=Req2},
-	Response = Handler:handle(Method, Path, Request),
+	Response = Callback:handle(Method, Path, Request),
 	Req3 = kb_response:handle(Response),
-	{ok, Req3, {ResourceServer, Handler, Context}}.
+	{ok, Req3, {ResourceServer, Callback, Context}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.

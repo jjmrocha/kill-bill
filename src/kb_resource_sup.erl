@@ -33,5 +33,5 @@ init([]) ->
 	process_flag(trap_exit, true),
 	error_logger:info_msg("~p [~p] Starting...\n", [?MODULE, self()]),
 	
-	ResourceServer = {kb_template, {kb_resource, start_link, []}, temporary, 2000, worker, [kb_resource]},
+	ResourceServer = {kb_resource, {kb_resource, start_link, []}, temporary, 2000, worker, [kb_resource]},
 	{ok,{{simple_one_for_one, 10, 60}, [ResourceServer]}}.

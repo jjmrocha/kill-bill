@@ -24,9 +24,9 @@
 
 init(_Transport, Req, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
-	TemplateConfig = proplists:get_value(template_config, Opts),
+	TopPage = proplists:get_value(top_page, Opts),
 	Context = proplists:get_value(context, Opts),
-	{ok, Req, {ResourceServer, TemplateConfig#template_config.top_page, list_to_binary(Context)}}.
+	{ok, Req, {ResourceServer, TopPage, list_to_binary(Context)}}.
 
 handle(Req, {ResourceServer, TopPage, Context}) ->
 	Request = #kb_request{context=Context, resource_server=ResourceServer, data=Req},

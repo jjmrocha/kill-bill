@@ -1,6 +1,6 @@
--module(hello_world_webapp).
+-module(examples_webclient).
 
--behaviour(kb_webapp_handler).
+-behaviour(kb_webclient_handler).
 
 %% ====================================================================
 %% API functions
