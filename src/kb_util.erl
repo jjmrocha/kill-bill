@@ -19,7 +19,7 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([remove_if_starts_with/2, remove_if_ends_with/2]).
+-export([remove_if_starts_with/2, remove_if_ends_with/2, implements_behaviour/2]).
 
 remove_if_starts_with(String, Search) ->
 	case string:str(String, Search) of
@@ -35,6 +35,11 @@ remove_if_ends_with(String, Search) ->
 		Len -> string:substr(String, 1, Len - 1);
 		_ -> String
 	end.
+
+implements_behaviour(Module, Behaviour) when is_atom(Module) andalso is_atom(Behaviour) ->
+	Attr = Module:module_info(attributes),
+	BList = proplists:get_value(behaviour, Attr, []),
+	lists:member(Behaviour, BList).
 
 %% ====================================================================
 %% Internal functions
