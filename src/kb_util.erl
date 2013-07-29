@@ -38,8 +38,10 @@ remove_if_ends_with(String, Search) ->
 
 implements_behaviour(Module, Behaviour) when is_atom(Module) andalso is_atom(Behaviour) ->
 	Attr = Module:module_info(attributes),
-	BList = proplists:get_value(behaviour, Attr, []),
-	lists:member(Behaviour, BList).
+	BiourList = proplists:get_value(behaviour, Attr, []),
+	BiorList = proplists:get_value(behavior, Attr, []),
+	FullList = BiourList ++ BiorList,
+	lists:member(Behaviour, FullList).
 
 %% ====================================================================
 %% Internal functions

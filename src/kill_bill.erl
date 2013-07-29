@@ -37,7 +37,10 @@ start_link() ->
 	gen_server:start_link(?SERVER, ?MODULE, [], []).
 
 config_server({server_config, ServerName, Config}) when is_atom(ServerName) andalso is_list(Config) ->
-	gen_server:call(?MODULE, {config_server, ServerName, Config});
+	case validate_server_config(Config) of
+		{ok, NConfig} -> gen_server:call(?MODULE, {config_server, ServerName, NConfig});
+		{error, Reason} -> {error, Reason}
+	end;
 config_server(FileName) when is_list(FileName) ->
 	case load_configuration(FileName) of
 		not_found -> {error, not_found};
@@ -55,7 +58,10 @@ get_server_list() ->
 	gen_server:call(?MODULE, {get_server_list}).
 
 deploy(ServerName, {webapp_config, WebAppName, Config}) when is_atom(ServerName) andalso is_atom(WebAppName) andalso is_list(Config) ->
-	gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, Config}});
+	case validate_webapp_config(Config) of
+		{ok, NConfig} -> gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, NConfig}});
+		{error, Reason} -> {error, Reason}
+	end;
 deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) ->
 	case load_configuration(FileName) of
 		not_found -> {error, not_found};
@@ -164,11 +170,11 @@ handle_call({stop_server, ServerName}, _From, State=#status{servers=Servers}) ->
 	{reply, Reply, NState};
 handle_call({get_server_list}, From, State=#status{servers=Servers}) ->
 	Fun = fun() ->
-		Rep = fun(ServerName, #server{running=Run, webapps=WebApps}, Acc) ->
-					  [{ServerName, Run, WebApps} | Acc]
-			  end,
-		Reply = dict:fold(Rep, [], Servers),
-		gen_server:reply(From, Reply)
+			Rep = fun(ServerName, #server{running=Run, webapps=WebApps}, Acc) ->
+					[{ServerName, Run, WebApps} | Acc]
+			end,
+			Reply = dict:fold(Rep, [], Servers),
+			gen_server:reply(From, Reply)
 	end,
 	spawn(Fun),
 	{noreply, State};
@@ -241,11 +247,11 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 	{reply, Reply, NState};
 handle_call({get_webapp_list}, From, State=#status{webapps=Webapps}) ->
 	Fun = fun() ->
-		Rep = fun(WebAppName, #webapp{server=ServerName}, Acc) ->
-					  [{WebAppName, ServerName} | Acc]
-			  end,
-		Reply = dict:fold(Rep, [], Webapps),
-		gen_server:reply(From, Reply)
+			Rep = fun(WebAppName, #webapp{server=ServerName}, Acc) ->
+					[{WebAppName, ServerName} | Acc]
+			end,
+			Reply = dict:fold(Rep, [], Webapps),
+			gen_server:reply(From, Reply)
 	end,
 	spawn(Fun),
 	{noreply, State};  
@@ -302,6 +308,37 @@ load_configuration(FileName) ->
 	case filelib:is_file(FileName) of
 		true ->	file:script(FileName);
 		false -> not_found
+	end.
+
+validate_server_config(Config) ->
+	% TODO Tenho de validar a configuração
+	{ok, Config}.
+
+validate_webapp_config(Config) ->
+	% TODO Tenho de validar toda a configuração
+	case validate_action(Config) of
+		{ok, NConfig} -> validate_webclient(NConfig);
+		Error -> Error
+	end.
+
+validate_action(Config) ->
+	ActionConfig = proplists:get_value(action, Config, []),
+	ValidAction = fun({ActionPrefix, Callback}) ->
+			not (is_list(ActionPrefix) andalso kb_util:implements_behaviour(Callback, kb_action_handler))
+	end,
+	case lists:filter(ValidAction, ActionConfig) of
+		[] ->	{ok, Config};
+		InvalidAction -> {error, {invalid_action, InvalidAction}}
+	end.
+
+validate_webclient(Config) ->
+	WebClientConfig = proplists:get_value(webclient, Config, []),
+	ValidWebClient = fun({WebclientName, WebclientPrefix, Callback}) ->
+			not (is_atom(WebclientName) andalso is_list(WebclientPrefix) andalso kb_util:implements_behaviour(Callback, kb_webclient_handler))
+	end,
+	case lists:filter(ValidWebClient, WebClientConfig) of
+		[] ->	{ok, Config};
+		InvalidWebClient -> {error, {invalid_webclient, InvalidWebClient}}
 	end.
 
 get_host(ServerConfig) ->
