@@ -14,9 +14,15 @@
 %% limitations under the License.
 %%
 
+-define(SYSTEM_CHOSEN_LANGUAGE, chosen_language).
+
 -record(kb_request, {
 				context,
 				resource_server,
+				session_manager,
+				session_key=none,
+				session_data=none,
+				session_saved=no,
 				method,
 				data
 			}

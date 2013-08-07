@@ -17,8 +17,8 @@
 {"args_list_empty_list", "No parameters"},
 
 {"form_title", "Form example"},
-{"form_field_id", "ID:"},
-{"form_field_name", "Name:"},
+{"form_field_id", "ID"},
+{"form_field_name", "Name"},
 {"form_submit", "Send"},
 {"form_empty_list", "No data"}
 

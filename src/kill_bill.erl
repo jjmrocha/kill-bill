@@ -86,7 +86,7 @@ call_webclient(WebAppName, WebclientName, Msg) when is_atom(WebAppName) andalso 
 %% ====================================================================
 
 -record(server, {config, webapps = [], running=false}).
--record(webapp, {config, webclients, resource, server}).
+-record(webapp, {config, webclients, resource, server, session}).
 -record(status, {servers, webapps}).
 
 init([]) ->
@@ -189,7 +189,8 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 				{ok, Server} ->
 					Resource = create_resource_server(Config),
 					Webclients = create_webclient_server(Config),
-					WebApp = #webapp{config=Config, resource=Resource, webclients=Webclients, server=ServerName},
+					SessionManager = create_session(WebAppName, Config),
+					WebApp = #webapp{config=Config, resource=Resource, webclients=Webclients, server=ServerName, session=SessionManager},
 					NWebapps = dict:store(WebAppName, WebApp, Webapps),
 					
 					NServer = Server#server{webapps=[WebAppName | Server#server.webapps]},
@@ -239,6 +240,7 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 			
 			stop_resource_server(WebApp#webapp.resource),
 			stop_webclient_server(dict:to_list(WebApp#webapp.webclients)),
+			stop_session(WebApp#webapp.session),
 			
 			error_logger:info_msg("WebApp ~p was undeployed from server ~p\n", [WebAppName, WebApp#webapp.server]),
 			NState = State#status{servers=NServers, webapps=NWebapps},
@@ -383,10 +385,23 @@ get_webclient_server([{WebClient, _prefix, Callback}| T], Dict) ->
 	{ok, Pid} = kb_webclient_sup:start_webclient(Callback),
 	get_webclient_server(T, dict:store(WebClient, Pid, Dict)).
 
+create_session(WebAppName, WebAppConfig) ->
+	SessionCache = list_to_atom(atom_to_list(WebAppName) ++ "_session"),
+	SessionTimeout = proplists:get_value(session_timeout, WebAppConfig, 30),
+	Options = [{max_age, SessionTimeout * 60},
+			{purge_interval, 60},
+			{cluster_nodes, all},
+			{sync_mode, full}],
+	gibreel:create_cache(SessionCache, Options),
+	SessionCache.
+
 stop_webclient_server([]) -> ok;
 stop_webclient_server([{_WebClient, Pid}|T]) -> 
 	kb_webclient:stop(Pid),
 	stop_webclient_server(T).
+
+stop_session(SessionCache) ->
+	gibreel:delete_cache(SessionCache).
 
 get_server_paths(ServerName, Host, Server, Webapps) ->
 	case Server#server.webapps of 
@@ -417,60 +432,65 @@ remove_slashs(Path) ->
 get_web_app_config([], Paths) -> lists:reverse(Paths);
 get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	ResourceServer = WebApp#webapp.resource,
+	SessionManager = WebApp#webapp.session,
 	TemplateConfig = proplists:get_value(template, WebApp#webapp.config, none),
 	ActionConfig = proplists:get_value(action, WebApp#webapp.config, []),
 	WebclientConfig = proplists:get_value(webclient, WebApp#webapp.config, []),
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
 	
-	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, Paths),
-	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, PathsWithTemplate),
-	PathsWithWebcliente = add_webclient(WebclientConfig, Context, WebApp#webapp.webclients, PathsWithAction) ,
+	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths),
+	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, SessionManager, PathsWithTemplate),
+	PathsWithWebcliente = add_webclient(WebclientConfig, Context, WebApp#webapp.webclients, SessionManager, PathsWithAction) ,
 	PathsWithStatic = add_static(StaticConfig, Context, PathsWithWebcliente),
 	get_web_app_config(T, PathsWithStatic).
 
-add_template(none, _Context, _ResourceServer, Paths) -> Paths;
-add_template(TemplateConfig, Context, ResourceServer, Paths) ->
+add_template(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
+add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths) ->
 	TemplatePrefix = proplists:get_value(prefix, TemplateConfig, "page"),
 	TopPage = proplists:get_value(top_page, TemplateConfig, "index"),
 	lists:append([
 			{Context, kb_cowboy_toppage, [
 					{resource_server, ResourceServer}, 
 					{top_page, TopPage},
-					{context, Context}
+					{context, Context},
+					{session_manager, SessionManager}
 					]},
 			{get_template_match(TemplatePrefix, Context), kb_cowboy_template, [
 					{resource_server, ResourceServer},
-					{context, Context}
+					{context, Context},
+					{session_manager, SessionManager}
 					]}
 			], Paths).
 
 get_template_match(TemplatePrefix, Context) ->
 	Context ++ remove_slashs(TemplatePrefix) ++ "/[...]".
 
-add_action([], _ResourceServer, _Context, Paths) -> Paths;
-add_action([{ActionPrefix, Callback}|T], Context, ResourceServer, Paths) ->
+add_action([], _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
+add_action([{ActionPrefix, Callback}|T], Context, ResourceServer, SessionManager, Paths) ->
 	NPaths = lists:append([
 				{get_action_match(ActionPrefix, Context), kb_cowboy_action, [
 						{resource_server, ResourceServer}, 
 						{callback, Callback},
-						{context, Context}
+						{context, Context},
+						{session_manager, SessionManager}
 						]}
 				], Paths),
-	add_action(T, Context, ResourceServer, NPaths).
+	add_action(T, Context, ResourceServer, SessionManager, NPaths).
 
 get_action_match(ActionPrefix, Context) ->
 	Context ++ remove_slashs(ActionPrefix) ++ "/[...]".
 
-add_webclient([], _Context, _App, Paths) -> Paths;
-add_webclient([{WebclientName, WebclientPrefix, _Callback}|T], Context, Webapps, Paths) ->
+add_webclient([], _Context, _App, _SessionManager, Paths) -> Paths;
+add_webclient([{WebclientName, WebclientPrefix, _Callback}|T], Context, Webapps, SessionManager, Paths) ->
 	{ok, Pid} = dict:find(WebclientName, Webapps),
 	NPaths = lists:append([
 				{string:concat(Context, remove_slashs(WebclientPrefix)), bullet_handler, [
 						{webclient_app, Pid},
+						{session_manager, SessionManager},
 						{handler, kb_bullet_websocket}
 						]}
 				], Paths),
-	add_webclient(T, Context, Webapps, NPaths).
+	add_webclient(T, Context, Webapps, SessionManager, NPaths).
 
 add_static(none, _Context, Paths) -> Paths;
 add_static(StaticConfig, Context, Paths) ->
