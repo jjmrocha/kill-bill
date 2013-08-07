@@ -49,6 +49,11 @@ handle(_Method, [<<"locale">>, Language], Req) ->
 	Output = io_lib:format("<html><body><a href=\"~s\">back</a></body></html>", [kb_helper:get_context(Req1)]),
 	{html, Output, Req1};
 
+handle(_Method, [<<"invalidate">>], Req) ->
+	Req1 = kb_helper:invalidate_session(Req),
+	Output = io_lib:format("<html><body><a href=\"~s\">back</a></body></html>", [kb_helper:get_context(Req1)]),
+	{html, Output, Req1};
+
 handle(_Method, [<<"client">>], Req) ->
 	{Args, Req1} = kb_helper:get_args(Req),
 	Msg = proplists:get_value(<<"msg">>, Args, <<"Hello 2">>),

@@ -26,6 +26,7 @@
 	get_args/1, 
 	get_session/1,
 	set_session/2,
+	invalidate_session/1,
 	set_cookie/4, 
 	get_cookie/2,
 	get_locale/1,
@@ -61,6 +62,16 @@ set_cookie(Name, Value, MaxAge, Req) when is_binary(Name) andalso is_binary(Valu
 	Req#kb_request{data=Req1};
 set_cookie(Name, Value, MaxAge, Req) when is_binary(Name) andalso is_integer(MaxAge) andalso is_record(Req, kb_request) ->
 	set_cookie(Name, term_to_binary(Value), MaxAge, Req).
+
+invalidate_session(Req) when is_record(Req, kb_request) ->
+	case Req#kb_request.session_key of
+		none -> 
+			{ok, Data1} = kb_session:invalidate_session(Req#kb_request.session_manager, Req#kb_request.data),
+			Req#kb_request{session_saved=yes, data=Data1};
+		SessionID -> 
+			{ok, Data1} = kb_session:invalidate_session(Req#kb_request.session_manager, SessionID, Req#kb_request.data),
+			Req#kb_request{session_saved=yes, data=Data1}
+	end.	
 
 get_cookie(Name, Req) when is_binary(Name) andalso is_record(Req, kb_request) ->
 	{Value, Req1} = kb_http:get_cookie(Name, Req#kb_request.data),

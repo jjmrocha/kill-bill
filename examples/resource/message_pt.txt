@@ -8,6 +8,7 @@
 {"index_redirect", "Ir para o Google"},
 {"index_json", "Devolver JSON"},
 {"index_locale", "Mudar o idioma para &quot;en&quot;"},
+{"index_invalidate", "Invalidar sess&atilde;o"},
 {"index_new_locale", "en"},
 {"index_websocket", "Cliente Websocket"},
 {"index_websocket_page", "P&aacute;gina cliente"},
