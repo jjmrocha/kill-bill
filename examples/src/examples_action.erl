@@ -22,10 +22,24 @@ handle(_Method, [<<"args">>], Req) ->
 	{dtl, args_list_dtl, [{arg_list, Args}], Req1};
 
 handle(<<"GET">>, [<<"form">>], Req) ->
-	{dtl, form_dtl, [], Req};
+	{Session, Req1} = kb_helper:get_session(Req),
+	List = proplists:get_value(list, Session, []),
+	{dtl, form_dtl, [{list, List}], Req1};
 handle(<<"POST">>, [<<"form">>], Req) ->
+	%% Retrive data from post
 	{Args, Req1} = kb_helper:get_args(Req),
-	{dtl, form_dtl, [{arg_list, Args}], Req1};
+	Id = proplists:get_value(<<"id">>, Args, none),
+	Name = proplists:get_value(<<"name">>, Args, none),
+	%% Retrive data from session
+	{Session, Req2} = kb_helper:get_session(Req1),
+	List = proplists:get_value(list, Session, []),
+	%% Add new tuple da list
+	NewList = [{Id, Name}|List],
+	%% Update session data
+	NewSession = lists:keystore(list, 1, Session, {list, NewList}),
+	Req3 = kb_helper:set_session(NewSession, Req2),
+	%% Generate response
+	{dtl, form_dtl, [{list, NewList}], Req3};
 
 handle(_Method, [<<"google">>], Req) ->
 	{redirect, <<"http://www.google.com">>, Req};

@@ -20,20 +20,23 @@
 
 init(_Transport, Req, Opts, _Active) ->
 	Webclient = proplists:get_value(webclient_app, Opts),
+	SessionManager = proplists:get_value(session_manager, Opts),
 	case kb_webclient:client_connect(Webclient) of
-		ok -> {ok, Req, Webclient};
+		ok -> {ok, Req, {Webclient, SessionManager}};
 		refuse -> {shutdown, Req} 
 	end.
 
-stream(<<"kb-ping">>, Req, Webclient) ->
-	{reply, <<"kb-pong">>, Req, Webclient};
-stream(Msg, Req, Webclient) ->
+stream(<<"kb-ping">>, Req, {Webclient, SessionManager}) ->
+	{ok, Req2} = kb_session:touch_session(SessionManager, Req),
+	{reply, <<"kb-pong">>, Req2, {Webclient, SessionManager}};
+stream(Msg, Req, {Webclient, SessionManager}) ->
 	kb_webclient:client_cast(Webclient, Msg),
-	{ok, Req, Webclient}.
+	{ok, Req2} = kb_session:touch_session(SessionManager, Req),
+	{ok, Req2, {Webclient, SessionManager}}.
 
-info(Msg, Req, Webclient) ->
-	{reply, Msg, Req, Webclient}.
+info(Msg, Req, {Webclient, SessionManager}) ->
+	{reply, Msg, Req, {Webclient, SessionManager}}.
 
-terminate(_Req, Webclient) ->
+terminate(_Req, {Webclient, _SessionManager}) ->
 	kb_webclient:client_disconnect(Webclient),
 	ok.

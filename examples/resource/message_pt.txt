@@ -17,8 +17,8 @@
 {"args_list_empty_list", "Sem par&acirc;metros"},
 
 {"form_title", "Exemplo de Form"},
-{"form_field_id", "ID:"},
-{"form_field_name", "Nome:"},
+{"form_field_id", "ID"},
+{"form_field_name", "Nome"},
 {"form_submit", "Enviar"},
 {"form_empty_list", "Sem dados"}
 

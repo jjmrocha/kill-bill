@@ -16,41 +16,20 @@
 
 -module(kb_http).
 
--include("kill_bill.hlr").
-
--define(COOKIE_CHOSEN_LANGUAGE, <<"kb-chosen-language">>).
-
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([get_accept_languages/1, set_chosen_language/3, set_cookie/5, get_dict/1]).
+-export([get_accept_languages/1, get_cookie/2, set_cookie/5]).
 
 get_accept_languages(Req) ->
-	{ChosenLanguage, Req2} = cowboy_req:cookie(?COOKIE_CHOSEN_LANGUAGE, Req),
-	case ChosenLanguage of
-		undefined ->
-			{ok, AcceptLanguages, _Req} = cowboy_req:parse_header(<<"accept-language">>, Req2),
-			case AcceptLanguages of
-				undefined -> [];
-				AcceptLanguages ->
-					Fun = fun({_TagA, QualityA}, {_TagB, QualityB}) -> QualityA > QualityB end,
-					AcceptLanguage2 = lists:sort(Fun, AcceptLanguages),
-					get_locales(AcceptLanguage2, [])
-			end;
-		_ -> [get_locale(binary_to_list(ChosenLanguage))]
+	{ok, AcceptLanguages, Req1} = cowboy_req:parse_header(<<"accept-language">>, Req),
+	case AcceptLanguages of
+		undefined -> {[], Req1};
+		AcceptLanguages ->
+			Fun = fun({_TagA, QualityA}, {_TagB, QualityB}) -> QualityA > QualityB end,
+			AcceptLanguage2 = lists:sort(Fun, AcceptLanguages),
+			{get_locales(AcceptLanguage2, []), Req1}
 	end.
-
-set_chosen_language(Path, Locale, Req) when is_tuple(Locale) ->
-	BinLocale = case Locale of
-		{Language, none} -> list_to_binary(Language);
-		{Language, Country} -> list_to_binary(Language ++ "-" ++ Country)
-	end,
-	set_cookie(Path, ?COOKIE_CHOSEN_LANGUAGE, BinLocale, none, Req).
-
-get_dict(#kb_request{resource_server=none}) -> none;
-get_dict(#kb_request{resource_server=ResourceServer, data=Req}) ->
-	Locales = get_accept_languages(Req),
-	kb_resource:get_resource(ResourceServer, Locales).
 
 set_cookie(Path, CookieName, Value, MaxAge, Req) ->
 	Opts = case MaxAge of
@@ -58,6 +37,12 @@ set_cookie(Path, CookieName, Value, MaxAge, Req) ->
 		_ -> [{path, Path}, {max_age, MaxAge}] 
 	end,
 	cowboy_req:set_resp_cookie(CookieName, Value, Opts, Req).
+
+get_cookie(CookieName, Req) ->
+	case cowboy_req:cookie(CookieName, Req) of
+		{undefined, Req2} -> {undefined, Req2};
+		{Value, Req2} -> {Value, Req2}
+	end.
 
 %% ====================================================================
 %% Internal functions

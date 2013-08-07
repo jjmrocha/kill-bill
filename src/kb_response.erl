@@ -31,16 +31,16 @@ handle({json, Value, Req}) ->
 	handle({raw, 200, [{<<"content-type">>, <<"application/json">>}], Output, Req});
 
 handle({dtl, Template, Args, Req}) ->
-	Dict = kb_http:get_dict(Req),
-	case kb_dtl_util:execute(Template, Dict, Args, Req) of
+	{Dict, Req1} = get_dict(Req),
+	case kb_dtl_util:execute(Template, Dict, Args, Req1) of
 		{ok, Html} ->
-			handle({html, Html, Req});
+			handle({html, Html, Req1});
 		{error, not_found} ->
 			Output = io_lib:format("Template [~p] not found", [Template]),
-			handle({raw, 404, [], Output, Req});
+			handle({raw, 404, [], Output, Req1});
 		{error, Reason} ->
 			Output = io_lib:format("Error ~p running template [~p]", [Reason, Template]),
-			handle({raw, 500, [], Output, Req})
+			handle({raw, 500, [], Output, Req1})
 	end;
 
 handle({redirect, Url, Req}) when is_list(Url) -> 
@@ -49,11 +49,28 @@ handle({redirect, Url, Req}) when is_binary(Url) ->
 	handle({raw, 302, [{<<"Location">>, Url}], [], Req});
 
 handle({raw, Status, Headers, Body, Req}) -> 
-	{ok, Req2} = cowboy_req:reply(Status, Headers, Body, Req#kb_request.data),
+	{ok, Req1} = session_touch(Req),
+	{ok, Req2} = cowboy_req:reply(Status, Headers, Body, Req1),
 	Req2.
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
 
+session_touch(#kb_request{session_saved=yes, data=Req}) -> {ok, Req};
+session_touch(#kb_request{session_manager=SessionManager, session_key=none, data=Req}) -> 
+	kb_session:touch_session(SessionManager, Req);
+session_touch(#kb_request{session_manager=SessionManager, session_key=SessionID, data=Req}) -> 
+	kb_session:touch_session(SessionManager, SessionID, Req).
 
+get_dict(Req=#kb_request{resource_server=none}) -> {none, Req};
+get_dict(Req=#kb_request{resource_server=ResourceServer}) ->
+	case kb_helper:get_locale(Req) of
+		{none, Req1} ->
+			{Locales, Data1} = kb_http:get_accept_languages(Req1#kb_request.data),
+			Dict = kb_resource:get_resource(ResourceServer, Locales),
+			{Dict, Req1#kb_request{data=Data1}};
+		{Locale, Req1} ->
+			Dict = kb_resource:get_resource(ResourceServer, [Locale]),
+			{Dict, Req1}
+	end.	

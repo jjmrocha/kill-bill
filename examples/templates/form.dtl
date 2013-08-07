@@ -7,10 +7,10 @@
 <form action="{{ context }}action/form" method="post" accept-charset="iso-8859-1">
 	<table border="0">
 		<tr>
-			<td>{% trans "form_field_id" %}</td><td><input type="text" name="id"/></td>
+			<td>{% trans "form_field_id" %}:</td><td><input type="text" name="id"/></td>
 		</tr>
 		<tr>
-			<td>{% trans "form_field_name" %}</td><td><input type="text" name="name"/></td>
+			<td>{% trans "form_field_name" %}:</td><td><input type="text" name="name"/></td>
 		</tr>
 		<tr>
 			<td colspan="2"><input type="submit" value="{% trans "form_submit" %}"/></td>
@@ -18,11 +18,14 @@
 	</table>  
 </form>
 <br>
-{% if arg_list %}
+{% if list %}
 	<table border="1">
-		{% for arg, value in arg_list %}	
 		<tr>
-			<td>{{ arg }}</td><td>{{ value }}</td>
+			<td>{% trans "form_field_id" %}</td><td>{% trans "form_field_name" %}</td>
+		</tr>	
+		{% for id, name in list %}	
+		<tr>
+			<td>{{ id }}</td><td>{{ name }}</td>
 		</tr>
 		{% endfor %}
 	</table>
