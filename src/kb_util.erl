@@ -19,7 +19,7 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([remove_if_starts_with/2, remove_if_ends_with/2, implements_behaviour/2]).
+-export([remove_if_starts_with/2, remove_if_ends_with/2, implements_behaviour/2, to_hex/1]).
 
 remove_if_starts_with(String, Search) ->
 	case string:str(String, Search) of
@@ -43,8 +43,15 @@ implements_behaviour(Module, Behaviour) when is_atom(Module) andalso is_atom(Beh
 	FullList = BiourList ++ BiorList,
 	lists:member(Behaviour, FullList).
 
+to_hex([]) -> [];
+to_hex(Bin) when is_binary(Bin) -> 
+	to_hex(binary_to_list(Bin));
+to_hex([H|T]) -> 
+	[to_digit(H div 16), to_digit(H rem 16) | to_hex(T)].
+
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
 
-
+to_digit(N) when N < 10 -> $0 + N;
+to_digit(N) -> $a + N-10.

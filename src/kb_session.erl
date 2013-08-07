@@ -33,9 +33,14 @@
 	touch_session/3]).
 
 create_session_id() ->
-	Data = term_to_binary([make_ref(), erlang:now()]),
-	Sha = binary:decode_unsigned(crypto:hash(sha, Data)),
-	list_to_binary(io_lib:format("~40.16.0b", [Sha])).
+	%% Code provided by Andrey Sergienko 
+	%% http://www.asergienko.com/erlang-how-to-create-uuid-or-session-id/
+	Now = {_, _, Micro} = erlang:now(),
+	Nowish = calendar:now_to_universal_time(Now),
+	Nowsecs = calendar:datetime_to_gregorian_seconds(Nowish),
+	Then = calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
+	Prefix = io_lib:format("~14.16.0b", [(Nowsecs - Then) * 1000000 + Micro]),
+	list_to_binary(Prefix ++ kb_util:to_hex(crypto:rand_bytes(9))).
 
 get_session(CacheName, Req) when is_atom(CacheName) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of

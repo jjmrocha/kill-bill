@@ -8,6 +8,7 @@
 {"index_redirect", "Go to Google"},
 {"index_json", "JSON output"},
 {"index_locale", "Change language to &quot;pt&quot;"},
+{"index_invalidate", "Session invalidate"},
 {"index_new_locale", "pt"},
 {"index_websocket", "Websocket Client"},
 {"index_websocket_page", "Client page"},
