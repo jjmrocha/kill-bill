@@ -14,7 +14,7 @@ handle(_Method, [<<"json">>, Id, <<"create">>], Req) ->
 	{Args, Req1} = kb_helper:get_args(Req),
 	Name = proplists:get_value(<<"name">>, Args, <<"Joaquim">>),
 	Surname = proplists:get_value(<<"surname">>, Args, <<"Rocha">>),
-	Obj = {struct, [{id, Id}, {name, Name}, {surname, Surname}]},
+	Obj = [{id, Id}, {name, Name}, {surname, Surname}],
 	{json, Obj, Req1};
 
 handle(_Method, [<<"args">>], Req) ->

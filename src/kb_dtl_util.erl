@@ -16,7 +16,7 @@
 
 -module(kb_dtl_util).
 
--include("kill_bill.hlr").
+-include("kill_bill.hrl").
 
 %% ====================================================================
 %% API functions

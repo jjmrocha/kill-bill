@@ -18,7 +18,7 @@
 
 -behaviour(cowboy_http_handler).
 
--include("kill_bill.hlr").
+-include("kill_bill.hrl").
 
 -export([init/3, handle/2, terminate/3]).
 

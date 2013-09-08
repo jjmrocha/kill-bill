@@ -16,7 +16,7 @@
 
 -module(kb_response).
 
--include("kill_bill.hlr").
+-include("kill_bill.hrl").
 
 %% ====================================================================
 %% API functions
