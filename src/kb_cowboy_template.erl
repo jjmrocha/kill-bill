@@ -16,7 +16,7 @@
 
 -module(kb_cowboy_template).
 
--include("kill_bill.hlr").
+-include("kill_bill.hrl").
 
 -behaviour(cowboy_http_handler).
 
