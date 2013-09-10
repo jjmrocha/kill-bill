@@ -20,19 +20,25 @@
 </p>
 
 <script type="text/javascript">
+	function write(msg) {
+		var pre = document.createElement("p");
+    	pre.style.wordWrap = "break-word";
+    	pre.innerHTML = msg;
+    	var output = document.getElementById("status"); 
+    	output.appendChild(pre);
+	} 
+
 	var onMessage = function (msg) {
-			var pre = document.createElement("p");
-	    	pre.style.wordWrap = "break-word";
-	    	pre.innerHTML = msg;
-	    	var output = document.getElementById("status"); 
-	    	output.appendChild(pre);
+		write("< " + msg);
 	};
 
 	var webclient = new WebClient("ws://127.0.0.1:8080{{ context }}websocket", onMessage);
 
 	$('#send').on('click', function() {
 		if (webclient) {
-			webclient.send($('#msg').val());
+			var msg = $('#msg').val();
+			webclient.send(msg);
+			write("> " + msg);
 		}
 	});
 </script>
