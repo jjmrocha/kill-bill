@@ -30,10 +30,10 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([start_link/1, stop/1, app_call/2, app_cast/2, client_connect/1, client_disconnect/1, client_cast/2]).
+-export([start_link/2, stop/1, app_call/2, app_cast/2, client_connect/2, client_disconnect/1, client_cast/2]).
 
-start_link(Callback) ->
-	gen_server:start_link(?MODULE, [Callback], []).
+start_link(Callback, SessionManager) ->
+	gen_server:start_link(?MODULE, [Callback, SessionManager], []).
 
 stop(Webclient) ->
 	gen_server:cast(Webclient, {stop}).
@@ -44,8 +44,8 @@ app_call(Webclient, Msg) ->
 app_cast(Webclient, Msg) ->
 	gen_server:cast(Webclient, {?ORIGIN_APP, Msg}).
 
-client_connect(Webclient) ->
-	gen_server:call(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_CONNECT}).
+client_connect(Webclient, Session) ->
+	gen_server:call(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_CONNECT, Session}).
 
 client_disconnect(Webclient) ->
 	gen_server:cast(Webclient, {?ORIGIN_CLIENT, self(), ?MSG_TYPE_DISCONNECT}).
@@ -56,18 +56,18 @@ client_cast(Webclient, Msg) ->
 %% ====================================================================
 %% Behavioural functions 
 %% ====================================================================
--record(state, {callback, app_state}).
+-record(state, {callback, session, app_state}).
 
-init([Callback]) ->
+init([Callback, SessionManager]) ->
 	{ok, Status} = Callback:handle_init(),
 	error_logger:info_msg("Starting WebClient callback ~p [~p]...\n", [Callback, self()]),
-	{ok, #state{callback=Callback, app_state=Status}}.
+	{ok, #state{callback=Callback, session=SessionManager, app_state=Status}}.
 
 handle_call({?ORIGIN_APP, Msg}, _From, State=#state{callback=Callback, app_state=Status}) ->
 	{reply, Reply, NStatus} = Callback:handle_app_call(Msg, Status),
 	{reply, Reply, State#state{app_state=NStatus}};
-handle_call({?ORIGIN_CLIENT, Client, ?MSG_TYPE_CONNECT}, From, State=#state{callback=Callback, app_state=Status}) ->
-	case Callback:handle_client_connect(Client, Status) of
+handle_call({?ORIGIN_CLIENT, Client, ?MSG_TYPE_CONNECT, Session}, From, State=#state{callback=Callback, app_state=Status}) ->
+	case Callback:handle_client_connect(Client, Session, Status) of
 		{ok, NStatus} -> {reply, ok, State#state{app_state=NStatus}};
 		{refuse, Reason, NStatus} ->
 			error_logger:info_msg("Connection from ~p refused, because [~p]...\n", [From, Reason]),

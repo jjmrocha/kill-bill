@@ -188,8 +188,8 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 					duplicated;
 				{ok, Server} ->
 					Resource = create_resource_server(Config),
-					Webclients = create_webclient_server(Config),
-					SessionManager = create_session(WebAppName, Config),
+					SessionManager = create_session(WebAppName, Config),					
+					Webclients = create_webclient_server(Config, SessionManager),
 					WebApp = #webapp{config=Config, resource=Resource, webclients=Webclients, server=ServerName, session=SessionManager},
 					NWebapps = dict:store(WebAppName, WebApp, Webapps),
 					
@@ -376,14 +376,14 @@ get_resource_server(ResourceConfig) ->
 stop_resource_server(none) -> ok;
 stop_resource_server(Pid) -> kb_resource:stop(Pid).
 
-create_webclient_server(WebAppConfig) ->
+create_webclient_server(WebAppConfig, SessionManager) ->
 	WebClientConfig = proplists:get_value(webclient, WebAppConfig, []),
-	get_webclient_server(WebClientConfig, dict:new()).
+	get_webclient_server(WebClientConfig, SessionManager, dict:new()).
 
-get_webclient_server([], Dict) -> Dict;
-get_webclient_server([{WebClient, _prefix, Callback}| T], Dict) ->
-	{ok, Pid} = kb_webclient_sup:start_webclient(Callback),
-	get_webclient_server(T, dict:store(WebClient, Pid, Dict)).
+get_webclient_server([], _SessionManager, Dict) -> Dict;
+get_webclient_server([{WebClient, _prefix, Callback}| T], SessionManager, Dict) ->
+	{ok, Pid} = kb_webclient_sup:start_webclient(Callback, SessionManager),
+	get_webclient_server(T, SessionManager, dict:store(WebClient, Pid, Dict)).
 
 create_session(WebAppName, WebAppConfig) ->
 	SessionCache = list_to_atom(atom_to_list(WebAppName) ++ "_session"),

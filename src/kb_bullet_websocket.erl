@@ -21,8 +21,9 @@
 init(_Transport, Req, Opts, _Active) ->
 	Webclient = proplists:get_value(webclient_app, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	case kb_webclient:client_connect(Webclient) of
-		ok -> {ok, Req, {Webclient, SessionManager}};
+	{Session, Req2} = kb_session:get_session_id(SessionManager, Req),
+	case kb_webclient:client_connect(Webclient, Session) of
+		ok -> {ok, Req2, {Webclient, SessionManager}};
 		refuse -> {shutdown, Req} 
 	end.
 
@@ -31,8 +32,7 @@ stream(<<"kb-ping">>, Req, {Webclient, SessionManager}) ->
 	{reply, <<"kb-pong">>, Req2, {Webclient, SessionManager}};
 stream(Msg, Req, {Webclient, SessionManager}) ->
 	kb_webclient:client_cast(Webclient, Msg),
-	{ok, Req2} = kb_session:touch_session(SessionManager, Req),
-	{ok, Req2, {Webclient, SessionManager}}.
+	{ok, Req, {Webclient, SessionManager}}.
 
 info(Msg, Req, {Webclient, SessionManager}) ->
 	{reply, Msg, Req, {Webclient, SessionManager}}.
