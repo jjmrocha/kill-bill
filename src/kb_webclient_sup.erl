@@ -19,15 +19,15 @@
 -behaviour(supervisor).
 
 -export([init/1]).
--export([start_link/0, start_webclient/1]).
+-export([start_link/0, start_webclient/2]).
 
 -define(SERVER, {local, ?MODULE}).
 
 start_link() ->
 	supervisor:start_link(?SERVER, ?MODULE, []).
 
-start_webclient(Callback) ->
-	supervisor:start_child(?MODULE, [Callback]).
+start_webclient(Callback, SessionManager) ->
+	supervisor:start_child(?MODULE, [Callback, SessionManager]).
 
 init([]) ->
 	process_flag(trap_exit, true),

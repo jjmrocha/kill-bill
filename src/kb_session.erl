@@ -24,6 +24,7 @@
 %% API functions
 %% ====================================================================
 -export([create_session_id/0, 
+	get_session_id/2,
 	get_session/2, 
 	set_session/3, 
 	set_session/4,
@@ -41,6 +42,12 @@ create_session_id() ->
 	Then = calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
 	Prefix = io_lib:format("~14.16.0b", [(Nowsecs - Then) * 1000000 + Micro]),
 	list_to_binary(Prefix ++ kb_util:to_hex(crypto:rand_bytes(9))).
+
+get_session_id(CacheName, Req) when is_atom(CacheName) ->
+	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
+		{undefined, Req2} -> {no_session, Req2};
+		{SessionID, Req2} -> {SessionID, Req2}
+	end.
 
 get_session(CacheName, Req) when is_atom(CacheName) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of

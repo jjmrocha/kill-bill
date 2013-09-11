@@ -24,9 +24,9 @@ behaviour_info(callbacks) ->
 		% OUTPUT: {ok, State}
 		{handle_init, 0},
 		
-		% INPUT: Client, State
+		% INPUT: Client, SessionID, State
 		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State}
-		{handle_client_connect, 2}, 
+		{handle_client_connect, 3}, 
 		
 		% INPUT: Client, Msg, State
 		% OUTPUT: {ok, State} 
