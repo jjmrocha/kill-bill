@@ -23,6 +23,7 @@
 %% ====================================================================
 -export([
 	get_context/1,
+	get_headers/1,
 	get_args/1, 
 	get_session/1,
 	set_session/2,
@@ -35,6 +36,10 @@
 
 get_context(Req) when is_record(Req, kb_request) ->
 	Req#kb_request.context.
+
+get_headers(Req) when is_record(Req, kb_request) ->
+	{Headers, Req1} = cowboy_req:headers(Req#kb_request.data),
+	{Headers, Req#kb_request{data=Req1}}.
 
 get_args(Req) when is_record(Req, kb_request) ->
 	case Req#kb_request.method of

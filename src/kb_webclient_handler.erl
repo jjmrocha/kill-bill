@@ -21,27 +21,27 @@
 behaviour_info(callbacks) ->
 	[
 		% INPUT: N/A
-		% OUTPUT: {ok, State} | {stop, Reason :: term()}
+		% OUTPUT: {ok, State}
 		{handle_init, 0},
 		
 		% INPUT: Client, State
-		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State} | {stop, Reason, State}
+		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State}
 		{handle_client_connect, 2}, 
 		
 		% INPUT: Client, Msg, State
-		% OUTPUT: {ok, State} | {stop, Reason, State}
+		% OUTPUT: {ok, State} 
 		{handle_client_cast, 3}, 
 		
 		% INPUT: Client, State
-		% OUTPUT: {ok, State} | {stop, Reason, State}
+		% OUTPUT: {ok, State} 
 		{handle_client_disconnect, 2},
 		
 		% INPUT: Msg, State
-		% OUTPUT: {ok, State} | {stop, Reason, State}
+		% OUTPUT: {ok, State} 
 		{handle_app_cast, 2},
 		
 		% INPUT: Msg, State
-		% OUTPUT: {reply, Reply, State} | {stop, Reason, State}
+		% OUTPUT: {reply, Reply, State} 
 		{handle_app_call, 2},
 		
 		% INPUT: State
