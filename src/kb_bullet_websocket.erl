@@ -24,7 +24,10 @@ init(_Transport, Req, Opts, _Active) ->
 	{Session, Req2} = kb_session:get_session_id(SessionManager, Req),
 	case kb_webclient:client_connect(Webclient, Session) of
 		ok -> {ok, Req2, {Webclient, SessionManager}};
-		refuse -> {shutdown, Req} 
+		{refuse, Reason} -> 
+			Output = io_lib:format("Connection refused: [~p]", [Reason]),
+			{ok, Req3} = cowboy_req:reply(403, [], Output, Req2),
+			{shutdown, Req3, {Webclient, SessionManager}} 
 	end.
 
 stream(<<"kb-ping">>, Req, {Webclient, SessionManager}) ->
