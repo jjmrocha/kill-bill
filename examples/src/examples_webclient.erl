@@ -5,7 +5,7 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([handle_init/0,
+-export([handle_init/1,
 	handle_client_connect/3,
 	handle_client_cast/3,
 	handle_client_disconnect/2,
@@ -13,10 +13,13 @@
 	handle_app_call/2,
 	handle_terminate/1]).
 
-handle_init() -> 
+handle_init(_Context) -> 
 	error_logger:info_msg("~p: handle_init()\n", [?MODULE]),
 	{ok, []}.
 
+handle_client_connect(Client, no_session, State) -> 
+	error_logger:info_msg("~p: handle_client_connect(~p, ~p)\n", [?MODULE, Client, no_session]),
+	{refuse, "No session, can't connect",State};
 handle_client_connect(Client, Session, State) -> 
 	error_logger:info_msg("~p: handle_client_connect(~p, ~p)\n", [?MODULE, Client, Session]),
 	{ok, [Client|State]}.

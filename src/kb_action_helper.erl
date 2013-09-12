@@ -14,7 +14,7 @@
 %% limitations under the License.
 %%
 
--module(kb_helper).
+-module(kb_action_helper).
 
 -include("kill_bill.hrl").
 

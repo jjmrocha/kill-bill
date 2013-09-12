@@ -20,9 +20,9 @@
 
 behaviour_info(callbacks) ->
 	[
-		% INPUT: N/A
+		% INPUT: WebClientContext
 		% OUTPUT: {ok, State}
-		{handle_init, 0},
+		{handle_init, 1},
 		
 		% INPUT: Client, SessionID, State
 		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State}

@@ -18,6 +18,8 @@
 
 -behaviour(gen_server).
 
+-include("kill_bill.hrl").
+
 -define(ORIGIN_CLIENT, client).
 -define(ORIGIN_APP, app).
 
@@ -59,7 +61,7 @@ client_cast(Webclient, Msg) ->
 -record(state, {callback, session, app_state}).
 
 init([Callback, SessionManager]) ->
-	{ok, Status} = Callback:handle_init(),
+	{ok, Status} = Callback:handle_init(#kb_webclient_context{session_manager=SessionManager}),
 	error_logger:info_msg("Starting WebClient callback ~p [~p]...\n", [Callback, self()]),
 	{ok, #state{callback=Callback, session=SessionManager, app_state=Status}}.
 

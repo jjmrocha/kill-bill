@@ -65,7 +65,7 @@ session_touch(#kb_request{session_manager=SessionManager, session_key=SessionID,
 
 get_dict(Req=#kb_request{resource_server=none}) -> {none, Req};
 get_dict(Req=#kb_request{resource_server=ResourceServer}) ->
-	case kb_helper:get_locale(Req) of
+	case kb_action_helper:get_locale(Req) of
 		{none, Req1} ->
 			{Locales, Data1} = kb_http:get_accept_languages(Req1#kb_request.data),
 			Dict = kb_resource:get_resource(ResourceServer, Locales),
