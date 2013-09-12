@@ -68,12 +68,11 @@ init([Callback, SessionManager]) ->
 handle_call({?ORIGIN_APP, Msg}, _From, State=#state{callback=Callback, app_state=Status}) ->
 	{reply, Reply, NStatus} = Callback:handle_app_call(Msg, Status),
 	{reply, Reply, State#state{app_state=NStatus}};
-handle_call({?ORIGIN_CLIENT, Client, ?MSG_TYPE_CONNECT, Session}, From, State=#state{callback=Callback, app_state=Status}) ->
+handle_call({?ORIGIN_CLIENT, Client, ?MSG_TYPE_CONNECT, Session}, _From, State=#state{callback=Callback, app_state=Status}) ->
 	case Callback:handle_client_connect(Client, Session, Status) of
 		{ok, NStatus} -> {reply, ok, State#state{app_state=NStatus}};
 		{refuse, Reason, NStatus} ->
-			error_logger:info_msg("Connection from ~p refused, because [~p]...\n", [From, Reason]),
-			{reply, refuse, State#state{app_state=NStatus}}
+			{reply, {refuse, Reason}, State#state{app_state=NStatus}}
 	end.
 
 handle_cast({?ORIGIN_CLIENT, Client, ?MSG_TYPE_DISCONNECT}, State=#state{callback=Callback, app_state=Status}) ->
