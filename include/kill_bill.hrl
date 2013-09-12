@@ -27,3 +27,5 @@
 				data
 			}
 		).
+
+-record(kb_webclient_context, {session_manager}).
