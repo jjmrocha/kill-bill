@@ -2,8 +2,8 @@
 
 {% block header %}
 <script	src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-<script src="{{ context }}/js/bullet.js"></script>
-<script src="{{ context }}/js/webclient.js"></script>
+<script src="{% context file="/js/bullet.js" %}"></script>
+<script src="{% context file="js/webclient.js" %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -32,7 +32,7 @@
 		write("< " + msg);
 	};
 
-	var webclient = new WebClient("ws://127.0.0.1:8080{{ context }}websocket", onMessage);
+	var webclient = new WebClient("ws://127.0.0.1:8080{% context %}websocket", onMessage);
 
 	$('#send').on('click', function() {
 		if (webclient) {

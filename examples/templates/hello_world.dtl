@@ -2,6 +2,6 @@
 
 {% block content %}
 
-<h1>{% trans "world_greetings" %}</h1>
+<h1>{% message key="world_greetings" %}</h1>
 
 {% endblock %}

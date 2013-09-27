@@ -1,13 +1,13 @@
 <html>
 	<header>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<title>{% block title %}{% trans "layout_title" %}{% endblock %}</title>
+		<title>{% block title %}{% message key="layout_title" %}{% endblock %}</title>
 		{% block header %}
 		{% endblock %}
 	</header>
 	<body>
 		<p align="left">
-			<img src="{{ context }}images/kill-bill-logo.png">
+			<img src="{% context file="/images/kill-bill-logo.png" %}">
 		</p>
 		{% block content %}{% endblock %}
 	</body>

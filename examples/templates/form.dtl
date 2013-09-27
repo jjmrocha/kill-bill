@@ -2,18 +2,18 @@
 
 {% block content %}
 
-<h1>{% trans "form_title" %}</h1>
+<h1>{% message key="form_title" %}</h1>
 <br>
-<form action="{{ context }}action/form" method="post">
+<form action="{% context %}action/form" method="post">
 	<table border="0">
 		<tr>
-			<td>{% trans "form_field_id" %}:</td><td><input type="text" name="id"/></td>
+			<td>{% message key="form_field_id" %}:</td><td><input type="text" name="id"/></td>
 		</tr>
 		<tr>
-			<td>{% trans "form_field_name" %}:</td><td><input type="text" name="name"/></td>
+			<td>{% message key="form_field_name" %}:</td><td><input type="text" name="name"/></td>
 		</tr>
 		<tr>
-			<td colspan="2"><input type="submit" value="{% trans "form_submit" %}"/></td>
+			<td colspan="2"><input type="submit" value="{% message key="form_submit" %}"/></td>
 		</tr>
 	</table>  
 </form>
@@ -21,7 +21,7 @@
 {% if list %}
 	<table border="1">
 		<tr>
-			<td>{% trans "form_field_id" %}</td><td>{% trans "form_field_name" %}</td>
+			<td>{% message key="form_field_id" %}</td><td>{% message key="form_field_name" %}</td>
 		</tr>	
 		{% for id, name in list %}	
 		<tr>
@@ -30,7 +30,7 @@
 		{% endfor %}
 	</table>
 {% else %}
-	<p>{% trans "form_empty_list" %}</p>
+	<p>{% message key="form_empty_list" %}</p>
 {% endif %}
 
 {% endblock %}
