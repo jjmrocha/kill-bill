@@ -14,35 +14,47 @@
 %% limitations under the License.
 %%
 
--module(kb_dtl_util).
-
--include("kill_bill.hrl").
+-module(kb_dtl_tag).
 
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([execute/4, execute/3]).
+-export([
+	message/2,
+	context/2]).
 
-execute(Dtl, Args, #kb_request{context=Context}) -> 
-	Options = [{context, Context}],
-	execute_dtl(Dtl, Args, Options). 
+message(Args, Options) ->
+	case lists:keyfind(key, 1, Args) of
+		false -> <<"{error -> use: message key=\"key_value\"}">>;
+		{_, Key} ->
+			case lists:keyfind(resource, 1, Options) of
+				false -> no_value(Key);
+				{_, Dict} ->
+					case dict:find(Key, Dict) of
+						error -> no_value(Key);
+						{ok, Text} -> Text
+					end
+			end
+	end.
 
-execute(Dtl, none, Args, Req) -> execute(Dtl, Args, Req);
-execute(Dtl, Dict, Args, #kb_request{context=Context}) ->
-	Options = [{resource, Dict},
-			{context, Context}],
-	execute_dtl(Dtl, Args, Options). 
+context(Args, Options) ->
+	Context = case lists:keyfind(context, 1, Options) of
+		false ->
+			error_logger:error_msg("KB: No context\n"),
+			<<"/">>;
+		{_, Other} -> Other
+	end,
+	context_out(Context, Args).
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
 
-execute_dtl(Dtl, Args, Options) -> 
-	try Dtl:render(Args, Options) of
-		{ok, IOList} -> {ok, IOList};
-		{error, Err} -> {error, Err}
-	catch
-		Type:Error ->
-			error_logger:error_msg("KB: Error executing DTL ~p: [~p:~p]\n", [Dtl, Type, Error]),
-			{error, not_found}
-	end. 
+no_value(Key) -> "{" ++ Key ++ "}".
+
+context_out(Context, []) -> Context;
+context_out(Context, [{file, Url}|_]) -> join(Context, Url);
+context_out(Context, [_|T]) -> context_out(Context, T).
+
+join(Context, <<$/, Url/binary>>) -> join(Context, Url);
+join(Context, Url) -> <<Context/binary, Url/binary>>.

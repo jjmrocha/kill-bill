@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>{% trans "args_list_title" %}</h1>
+<h1>{% message key="args_list_title" %}</h1>
 <br>
 {% if arg_list %}
 	<table border="1">
@@ -13,7 +13,7 @@
 		{% endfor %}
 	</table>
 {% else %}
-	<p>{% trans "args_list_empty_list" %}</p>
+	<p>{% message key="args_list_empty_list" %}</p>
 {% endif %}
 
 {% endblock %}
