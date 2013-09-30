@@ -88,10 +88,10 @@ add_resources(Dir, Basename, Extension, [Filename|Tail], Store) ->
 			NStore = dict:store(Locale, convert_to_dict(ValueList), Store),
 			add_resources(Dir, Basename, Extension, Tail, NStore);
 		{error, {Line, _Mod, _Term}} ->
-			error_logger:error_msg("Error in line [~p] of file ~s\n", [Line, Filename]),
+			error_logger:error_msg("KB: Error in line [~p] of file ~s\n", [Line, Filename]),
 			add_resources(Dir, Basename, Extension, Tail, Store);
 		{error, Reason} ->
-			error_logger:error_msg("Error [~p] reading file ~s\n", [Reason, Filename]),
+			error_logger:error_msg("KB: Error [~p] reading file ~s\n", [Reason, Filename]),
 			add_resources(Dir, Basename, Extension, Tail, Store)		
 	end.
 
