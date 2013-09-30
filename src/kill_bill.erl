@@ -107,7 +107,7 @@ handle_call({config_server, ServerName, Config}, _From, State=#status{servers=Se
 			error_logger:info_msg("Server ~p reconfigured: ~p\n", [ServerName, Config]),
 			ok;		
 		{ok, _Server} ->
-			error_logger:error_msg("Server ~p is running\n", [ServerName]),
+			error_logger:error_msg("KB: Server ~p is running\n", [ServerName]),
 			NState = State,
 			server_running
 	end,
@@ -115,7 +115,7 @@ handle_call({config_server, ServerName, Config}, _From, State=#status{servers=Se
 handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
 	Reply = case dict:find(ServerName, Servers)  of
 		error ->			
-			error_logger:error_msg("Server ~p not found\n", [ServerName]),
+			error_logger:error_msg("KB: Server ~p not found\n", [ServerName]),
 			NState = State,
 			not_found;
 		{ok, #server{running=true}} ->
@@ -152,7 +152,7 @@ handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, we
 handle_call({stop_server, ServerName}, _From, State=#status{servers=Servers}) ->
 	Reply = case dict:find(ServerName, Servers)  of
 		error ->			
-			error_logger:error_msg("Server ~p not found\n", [ServerName]),
+			error_logger:error_msg("KB: Server ~p not found\n", [ServerName]),
 			NState = State,
 			not_found;
 		{ok, #server{running=false}} ->
@@ -183,7 +183,7 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 		error ->
 			case dict:find(ServerName, Servers) of
 				error ->
-					error_logger:error_msg("Server ~p not configured\n", [ServerName]),
+					error_logger:error_msg("KB: Server ~p not configured\n", [ServerName]),
 					NState = State,
 					duplicated;
 				{ok, Server} ->
@@ -211,7 +211,7 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 					ok
 			end;
 		{ok, _App} ->
-			error_logger:error_msg("Duplicated webapp ~p\n", [WebAppName]),
+			error_logger:error_msg("KB: Duplicated webapp ~p\n", [WebAppName]),
 			NState = State,
 			duplicated
 	end,
@@ -219,7 +219,7 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
 	Reply = case dict:find(WebAppName, Webapps) of
 		error ->			
-			error_logger:error_msg("WebApp ~p not found\n", [WebAppName]),
+			error_logger:error_msg("KB: WebApp ~p not found\n", [WebAppName]),
 			NState = State,
 			not_found;
 		{ok, WebApp} ->
@@ -260,12 +260,12 @@ handle_call({get_webapp_list}, From, State=#status{webapps=Webapps}) ->
 handle_call({call_webclient, WebAppName, WebclientName, Msg}, From, State=#status{webapps=Webapps}) ->
 	case dict:find(WebAppName, Webapps) of
 		error ->
-			error_logger:error_msg("Receive call for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]),
+			error_logger:error_msg("KB: Receive call for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]),
 			{reply, no_webapp, State};
 		{ok, #webapp{webclients=Webclients}} ->
 			case dict:find(WebclientName, Webclients) of
 				error ->
-					error_logger:error_msg("Receive call for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]),
+					error_logger:error_msg("KB: Receive call for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]),
 					{reply, no_webclient, State};
 				{ok, Pid} -> 
 					Fun = fun () ->
@@ -280,11 +280,11 @@ handle_call({call_webclient, WebAppName, WebclientName, Msg}, From, State=#statu
 handle_cast({cast_webclient, WebAppName, WebclientName, Msg}, State=#status{webapps=Webapps}) ->
 	case dict:find(WebAppName, Webapps) of
 		error ->
-			error_logger:error_msg("Receive cast for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]);		
+			error_logger:error_msg("KB: Receive cast for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]);		
 		{ok, #webapp{webclients=Webclients}} ->
 			case dict:find(WebclientName, Webclients) of
 				error ->
-					error_logger:error_msg("Receive cast for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]);
+					error_logger:error_msg("KB: Receive cast for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]);
 				{ok, Pid} -> kb_webclient:app_cast(Pid, Msg)
 			end
 	end,
