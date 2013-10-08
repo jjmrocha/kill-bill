@@ -26,6 +26,8 @@
 				session_key=none,
 				session_data=none,
 				session_saved=no,
+				locales=none,
+				resources=none,
 				method,
 				data
 			}

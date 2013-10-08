@@ -31,7 +31,7 @@ handle({json, Value, Req}) ->
 	handle({raw, 200, [{<<"content-type">>, <<"application/json">>}], Output, Req});
 
 handle({dtl, Template, Args, Req}) ->
-	{Dict, Req1} = get_dict(Req),
+	{Dict, Req1} = kb_resource_util:get_dict(Req),
 	case kb_dtl_util:execute(Template, Dict, Args, Req1) of
 		{ok, Html} ->
 			handle({html, Html, Req1});
@@ -62,9 +62,3 @@ session_touch(#kb_request{session_manager=SessionManager, session_key=none, data
 	kb_session:touch_session(SessionManager, Req);
 session_touch(#kb_request{session_manager=SessionManager, session_key=SessionID, data=Req}) -> 
 	kb_session:touch_session(SessionManager, SessionID, Req).
-
-get_dict(Req=#kb_request{resource_server=none}) -> {none, Req};
-get_dict(Req=#kb_request{resource_server=ResourceServer}) ->
-	{Locales, Req1} = kb_locale:get_locales(Req),
-	Dict = kb_resource:get_resource(ResourceServer, Locales),
-	{Dict, Req1}.
