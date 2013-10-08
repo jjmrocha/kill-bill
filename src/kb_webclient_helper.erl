@@ -29,7 +29,9 @@
 get_session(SessionID, Ctx) when is_binary(SessionID) andalso is_record(Ctx, kb_webclient_context) ->
 	case get_session_data(Ctx#kb_webclient_context.session_manager, SessionID) of
 		session_expired -> session_expired;
-		SessionData -> proplists:get_value(user, SessionData)
+		SessionData -> 
+			{_, UserData} = lists:keyfind(user, 1, SessionData),
+			UserData
 	end.
 
 set_session(SessionID, UserData, Ctx) when is_binary(SessionID) andalso is_list(UserData) andalso is_record(Ctx, kb_webclient_context) ->

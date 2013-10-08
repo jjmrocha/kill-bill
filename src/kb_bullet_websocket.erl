@@ -19,8 +19,8 @@
 -export([init/4, stream/3, info/3, terminate/2]).
 
 init(_Transport, Req, Opts, _Active) ->
-	Webclient = proplists:get_value(webclient_app, Opts),
-	SessionManager = proplists:get_value(session_manager, Opts),
+	{_, Webclient} = lists:keyfind(webclient_app, 1, Opts),
+	{_, SessionManager} = lists:keyfind(session_manager, 1, Opts),
 	{Session, Req2} = kb_session:get_session_id(SessionManager, Req),
 	case kb_webclient:client_connect(Webclient, Session) of
 		ok -> {ok, Req2, {Webclient, SessionManager}};
