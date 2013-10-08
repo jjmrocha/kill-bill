@@ -24,7 +24,7 @@
 %% API functions
 %% ====================================================================
 -export([create_session_id/0, 
-	get_session_id/2,
+	get_session_id/1,
 	get_session/2, 
 	set_session/3, 
 	set_session/4,
@@ -33,6 +33,7 @@
 	touch_session/2,
 	touch_session/3]).
 
+-spec create_session_id() -> binary().
 create_session_id() ->
 	%% Code provided by Andrey Sergienko 
 	%% http://www.asergienko.com/erlang-how-to-create-uuid-or-session-id/
@@ -43,13 +44,17 @@ create_session_id() ->
 	Prefix = io_lib:format("~14.16.0b", [(Nowsecs - Then) * 1000000 + Micro]),
 	list_to_binary(Prefix ++ kb_util:to_hex(crypto:rand_bytes(9))).
 
-get_session_id(CacheName, Req) when is_atom(CacheName) ->
+-spec get_session_id(Req :: cowboy_req:req()) -> 
+	{no_session, cowboy_req:req()} | {binary(), cowboy_req:req()}.
+get_session_id(Req) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
 		{undefined, Req2} -> {no_session, Req2};
 		{SessionID, Req2} -> {SessionID, Req2}
 	end.
 
-get_session(CacheName, Req) when is_atom(CacheName) ->
+-spec get_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+	{no_session, list(), cowboy_req:req()} | {binary(), list(), cowboy_req:req()}.
+get_session(CacheName, Req) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
 		{undefined, Req2} -> {no_session, ?SESSION_DATA, Req2};
 		{SessionID, Req2} -> 
@@ -59,33 +64,45 @@ get_session(CacheName, Req) when is_atom(CacheName) ->
 			end
 	end.
 
-set_session(CacheName, SessionData, Req) when is_atom(CacheName) andalso is_list(SessionData) ->
+-spec set_session(CacheName :: atom(), SessionData :: list(), Req :: cowboy_req:req()) ->
+	{binary(), cowboy_req:req()}.
+set_session(CacheName, SessionData, Req) ->
 	SessionID = create_session_id(),
 	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, none, Req),
 	set_session(CacheName, SessionID, SessionData, Req2).
 
-set_session(CacheName, SessionID, SessionData, Req) when is_atom(CacheName) andalso is_binary(SessionID) andalso is_list(SessionData) ->
+-spec set_session(CacheName :: atom(), SessionID :: binary(), SessionData :: list(), Req :: cowboy_req:req()) ->
+	{binary(), cowboy_req:req()}.
+set_session(CacheName, SessionID, SessionData, Req) ->
 	g_cache:store(CacheName, SessionID, SessionData),
 	{SessionID, Req}.
 
-invalidate_session(CacheName, Req) when is_atom(CacheName) ->
+-spec invalidate_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+	{ok, cowboy_req:req()}.
+invalidate_session(CacheName, Req) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
 		{undefined, Req2} -> {ok, Req2};
-		{SessionID, Req2} -> invalidate_session(acheName, SessionID, Req2)
+		{SessionID, Req2} -> invalidate_session(CacheName, SessionID, Req2)
 	end.
 
-invalidate_session(CacheName, SessionID, Req) when is_atom(CacheName) andalso is_binary(SessionID) ->
+-spec invalidate_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
+	{ok, cowboy_req:req()}.
+invalidate_session(CacheName, SessionID, Req) ->
 	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, 0, Req),
 	g_cache:remove(CacheName, SessionID),
 	{ok, Req2}.
 
-touch_session(CacheName, Req) when is_atom(CacheName)  ->
+-spec touch_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+	{ok, cowboy_req:req()}.
+touch_session(CacheName, Req) ->
 	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
 		{undefined, Req2} -> {ok, Req2};
 		{SessionID, Req2} -> touch_session(CacheName, SessionID, Req2)
 	end.
 
-touch_session(CacheName, SessionID, Req) when is_atom(CacheName) andalso is_binary(SessionID) ->
+-spec touch_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
+	{ok, cowboy_req:req()}.
+touch_session(CacheName, SessionID, Req) ->
 	g_cache:touch(CacheName, SessionID),
 	{ok, Req}.
 

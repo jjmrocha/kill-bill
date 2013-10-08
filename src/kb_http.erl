@@ -19,17 +19,11 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([get_accept_languages/1, get_cookie/2, set_cookie/5]).
+-export([get_header/2, get_cookie/2, set_cookie/5]).
 
-get_accept_languages(Req) ->
-	{ok, AcceptLanguages, Req1} = cowboy_req:parse_header(<<"accept-language">>, Req),
-	case AcceptLanguages of
-		undefined -> {[], Req1};
-		AcceptLanguages ->
-			Fun = fun({_TagA, QualityA}, {_TagB, QualityB}) -> QualityA > QualityB end,
-			AcceptLanguage2 = lists:sort(Fun, AcceptLanguages),
-			{get_locales(AcceptLanguage2, []), Req1}
-	end.
+get_header(Name, Req) ->
+	{ok, Header, Req1} = cowboy_req:parse_header(Name, Req),
+	{Header, Req1}.
 
 set_cookie(Path, CookieName, Value, MaxAge, Req) ->
 	Opts = case MaxAge of
@@ -48,21 +42,3 @@ get_cookie(CookieName, Req) ->
 %% Internal functions
 %% ====================================================================
 
-get_locales([], List) -> lists:reverse(List);
-get_locales([H|T], List) ->
-	{Lang, _Quality} = H,
-	Language = binary_to_list(Lang),
-	case get_locale(Language) of
-		none -> get_locales(T, List);
-		Locale -> get_locales(T, [Locale|List])
-	end.
-
-get_locale('*') -> none;
-get_locale(Language) ->
-	case string:str(Language, "-") of
-		0 -> {Language, none};
-		Pos -> 
-			L = string:substr(Language, 1, Pos - 1),
-			C = string:substr(Language, Pos + 1),
-			{L, string:to_upper(C)}
-	end.

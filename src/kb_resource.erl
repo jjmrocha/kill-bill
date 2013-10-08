@@ -16,6 +16,8 @@
 
 -module(kb_resource).
 
+-include("kill_bill.hrl").
+
 -behaviour(gen_server).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -107,15 +109,15 @@ get_locale_from_filename(Basename, Extension, Filename) ->
 	NoBasename = string:substr(Filename, string:len(Basename) + 1),
 	NoExtension = string:substr(NoBasename, 1, string:len(NoBasename) - string:len(Extension)),
 	case NoExtension of
-		[] -> {none, none};
+		[] -> ?ANY_LOCALE;
 		_ ->
 			CleanLocation = kb_util:remove_if_starts_with(NoExtension, "_"),
 			case string:str(CleanLocation, "_") of
-				0 -> {CleanLocation, none};
+				0 -> {list_to_binary(CleanLocation), ?NO_COUNTRY_IN_LOCALE};
 				Pos -> 
 					L = string:substr(CleanLocation, 1, Pos - 1),
 					C = string:substr(CleanLocation, Pos + 1),
-					{L, string:to_upper(C)}
+					{list_to_binary(L), list_to_binary(string:to_upper(C))}
 			end
 	end.
 
@@ -124,24 +126,25 @@ run(Locales, From, Store) ->
 	Fun = fun() ->
 			Reply = case dict:size(Store) of
 				0 -> dict:new();
-				1 -> find(Server, [], Store);
+				1 -> find(Server, ?ANY_LOCALE, Store);
 				_ -> find(Server, Locales, Store)
 			end,
 			gen_server:reply(From, Reply)
 	end,
 	spawn(Fun).
 
-find(_Server, [], Store) ->
-	case dict:find({none, none}, Store) of
+find(_Server, ?ANY_LOCALE, Store) -> 
+	case dict:find(?ANY_LOCALE, Store) of
 		{ok, Value} -> Value;
 		error -> dict:new()
 	end;
+find(Server, [], Store) -> find(Server, ?ANY_LOCALE, Store);
 find(Server, [Locale|Tail], Store) -> 
 	case dict:find(Locale, Store) of
 		{ok, Value} -> Value;
 		error ->
 			{L, _} = Locale,
-			case dict:find({L, none}, Store) of
+			case dict:find({L, ?NO_COUNTRY_IN_LOCALE}, Store) of
 				{ok, Value} ->
 					kb_resource:add_locale(Server, Locale, Value),
 					Value;

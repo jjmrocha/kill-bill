@@ -26,29 +26,17 @@
 	set_session/3
 	]).
 
-get_session(SessionID, Ctx) when is_binary(SessionID) andalso is_record(Ctx, kb_webclient_context) ->
-	case get_session_data(Ctx#kb_webclient_context.session_manager, SessionID) of
-		session_expired -> session_expired;
-		SessionData -> 
-			{_, UserData} = lists:keyfind(user, 1, SessionData),
-			UserData
-	end.
+-spec get_session(SessionID :: binary(), Ctx :: #kb_webclient_context{}) -> session_expired | SessionData
+	when SessionData :: [{any(), any()}, ...].
+get_session(SessionID, Ctx) ->
+	kb_session_util:get_user_data(SessionID, Ctx).
 
-set_session(SessionID, UserData, Ctx) when is_binary(SessionID) andalso is_list(UserData) andalso is_record(Ctx, kb_webclient_context) ->
-	case get_session_data(Ctx#kb_webclient_context.session_manager, SessionID) of
-		session_expired -> session_expired;
-		SessionData -> 
-			NSessionData = lists:keystore(user, 1, SessionData, {user, UserData}),
-			g_cache:store(Ctx#kb_webclient_context.session_manager, SessionID, NSessionData),
-			ok
-	end.
+-spec set_session(SessionID :: binary(), SessionData, Ctx :: #kb_webclient_context{}) -> session_expired | ok
+	when SessionData :: [{any(), any()}, ...].
+set_session(SessionID, UserData, Ctx) ->
+	kb_session_util:set_user_data(SessionID, UserData, Ctx).
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
 
-get_session_data(CacheName, SessionID) ->
-	case g_cache:get(CacheName, SessionID) of
-		{ok, SessionData} -> SessionData;
-		_ -> session_expired
-	end.

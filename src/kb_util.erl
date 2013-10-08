@@ -19,7 +19,11 @@
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([remove_if_starts_with/2, remove_if_ends_with/2, implements_behaviour/2, to_hex/1]).
+-export([remove_if_starts_with/2, 
+		 remove_if_ends_with/2, 
+		 implements_behaviour/2, 
+		 to_hex/1,
+		 upper/1]).
 
 remove_if_starts_with(String, Search) ->
 	case string:str(String, Search) of
@@ -48,6 +52,13 @@ to_hex(Bin) when is_binary(Bin) ->
 	to_hex(binary_to_list(Bin));
 to_hex([H|T]) -> 
 	[to_digit(H div 16), to_digit(H rem 16) | to_hex(T)].
+
+upper(Value) when is_binary(Value) ->
+	List = binary_to_list(Value),
+	Upper = upper(List),
+	list_to_binary(Upper);
+upper(Value) ->
+	string:to_upper(Value).
 
 %% ====================================================================
 %% Internal functions

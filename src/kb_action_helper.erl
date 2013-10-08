@@ -30,18 +30,23 @@
 	invalidate_session/1,
 	set_cookie/4, 
 	get_cookie/2,
-	get_locale/1,
+	get_locales/1,
 	set_locale/2
 	]).
 
-get_context(Req) when is_record(Req, kb_request) ->
+-spec get_context(Req :: #kb_request{}) -> binary().
+get_context(Req) ->
 	Req#kb_request.context.
 
-get_headers(Req) when is_record(Req, kb_request) ->
+-spec get_headers(Req :: #kb_request{}) -> {Headers, #kb_request{}}
+	when Headers :: [{binary(), binary()}, ...].
+get_headers(Req) ->
 	{Headers, Req1} = cowboy_req:headers(Req#kb_request.data),
 	{Headers, Req#kb_request{data=Req1}}.
 
-get_args(Req) when is_record(Req, kb_request) ->
+-spec get_args(Req :: #kb_request{}) -> {Args, #kb_request{}}
+	when Args :: [{binary(), binary()}, ...].
+get_args(Req) ->
 	case Req#kb_request.method of
 		<<"GET">> ->
 			{QSVals, Req1} = cowboy_req:qs_vals(Req#kb_request.data),
@@ -52,23 +57,25 @@ get_args(Req) when is_record(Req, kb_request) ->
 		_ -> {[], Req}
 	end.
 
-get_session(Req) when is_record(Req, kb_request) ->
-	{SessionData, Req1} = get_session_data(Req),
-	{_, UserData} = lists:keyfind(user, 1, SessionData),
-	{UserData, Req1}.
+-spec get_session(Req :: #kb_request{}) -> {SessionData, #kb_request{}}
+	when SessionData :: [{any(), any()}, ...].
+get_session(Req) ->
+	kb_session_util:get_user_data(Req).
 
-set_session(UserData, Req) when is_list(UserData) andalso is_record(Req, kb_request) ->
-	{SessionData, Req1} = get_session_data(Req),
-	NSessionData = lists:keystore(user, 1, SessionData, {user, UserData}),
-	store_session_data(Req1#kb_request{session_data=NSessionData}).
+-spec set_session(SessionData, Req :: #kb_request{}) -> #kb_request{}
+	when SessionData :: [{any(), any()}, ...].
+set_session(UserData, Req) ->
+	kb_session_util:set_user_data(UserData, Req).
 
-set_cookie(Name, Value, MaxAge, Req) when is_binary(Name) andalso is_binary(Value) andalso is_integer(MaxAge) andalso is_record(Req, kb_request) ->
+-spec set_cookie(Name :: binary(), Value :: term(), MaxAge :: integer(), Req :: #kb_request{}) -> #kb_request{}.
+set_cookie(Name, Value, MaxAge, Req) when is_binary(Value) ->
 	Req1 = kb_http:set_cookie(Req#kb_request.context, Name, Value, MaxAge, Req#kb_request.data),
 	Req#kb_request{data=Req1};
-set_cookie(Name, Value, MaxAge, Req) when is_binary(Name) andalso is_integer(MaxAge) andalso is_record(Req, kb_request) ->
+set_cookie(Name, Value, MaxAge, Req) ->
 	set_cookie(Name, term_to_binary(Value), MaxAge, Req).
 
-invalidate_session(Req) when is_record(Req, kb_request) ->
+-spec invalidate_session(Req :: #kb_request{}) -> #kb_request{}.
+invalidate_session(Req) ->
 	case Req#kb_request.session_key of
 		none -> 
 			{ok, Data1} = kb_session:invalidate_session(Req#kb_request.session_manager, Req#kb_request.data),
@@ -78,55 +85,21 @@ invalidate_session(Req) when is_record(Req, kb_request) ->
 			Req#kb_request{session_saved=yes, data=Data1}
 	end.	
 
-get_cookie(Name, Req) when is_binary(Name) andalso is_record(Req, kb_request) ->
+-spec get_cookie(Name :: binary(), Req :: #kb_request{}) -> {binary(), #kb_request{}}.
+get_cookie(Name, Req) ->
 	{Value, Req1} = kb_http:get_cookie(Name, Req#kb_request.data),
 	{Value, Req#kb_request{data=Req1}}.
 
-get_locale(Req) when is_record(Req, kb_request) ->
-	{SystemData, Req1} = get_system_data(Req),
-	ChosenLanguage = case lists:keyfind(?SYSTEM_CHOSEN_LANGUAGE, 1, SystemData) of
-		false -> none;
-		{_, Lang} -> Lang
-	end,
-	{ChosenLanguage, Req1}.
+-spec get_locales(Req :: #kb_request{}) -> {any_locale | Locale, #kb_request{}}
+	when Locale :: {Language :: binary(), Country :: binary()}.
+get_locales(Req) ->
+	kb_locale:get_locales(Req).
 
-set_locale(Locale, Req) when is_tuple(Locale) andalso is_record(Req, kb_request) ->
-	set_system_property(?SYSTEM_CHOSEN_LANGUAGE, Locale, Req).
+-spec set_locale(Locale, Req :: #kb_request{}) -> #kb_request{}
+	when Locale :: {Language :: binary(), Country :: binary()}.
+set_locale(Locale, Req) ->
+	kb_locale:set_locale(Locale, Req).
 
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
-
-set_system_property(Key, Value, Req) when is_atom(Key) andalso is_record(Req, kb_request) ->
-	{SystemData, Req1} = get_system_data(Req),
-	NSystemData = lists:keystore(Key, 1, SystemData, {Key, Value}),
-	SessionData = lists:keystore(system, 1, Req1#kb_request.session_data, {system, NSystemData}),
-	store_session_data(Req1#kb_request{session_data=SessionData}).
-
-get_system_data(Req) when is_record(Req, kb_request) ->
-	{SessionData, Req1} = get_session_data(Req),
-	{_, SystemData} = lists:keyfind(system, 1, SessionData),
-	{SystemData, Req1}.
-
-get_session_data(Req) when is_record(Req, kb_request) ->
-	case Req#kb_request.session_data of 
-		none -> 
-			case kb_session:get_session(Req#kb_request.session_manager, Req#kb_request.data) of
-				{no_session, SessionData, Data1} ->
-					{SessionData, Req#kb_request{data=Data1, session_data=SessionData}};
-				{SessionID, SessionData, Data1} ->
-					{SessionData, Req#kb_request{data=Data1, session_key=SessionID, session_data=SessionData}}
-			end;
-		SessionData ->
-			{SessionData, Req}
-	end.
-
-store_session_data(Req) when is_record(Req, kb_request) ->
-	case Req#kb_request.session_key of
-		none -> 
-			{SessionID, Data1} = kb_session:set_session(Req#kb_request.session_manager, Req#kb_request.session_data, Req#kb_request.data),
-			Req#kb_request{session_saved=yes, session_key=SessionID, data=Data1};
-		SessionID -> 
-			{_SessionID, Data1} = kb_session:set_session(Req#kb_request.session_manager, SessionID, Req#kb_request.session_data, Req#kb_request.data),
-			Req#kb_request{session_saved=yes, data=Data1}
-	end.
