@@ -16,13 +16,11 @@
 
 -module(kb_action_handler).
 
--export([behaviour_info/1]).
+-include("kill_bill.hrl").
 
-behaviour_info(callbacks) ->
-	[
-		% INPUT: Method, Path, Request
-		% OUTPUT: {html, Value, Request} | {json, Value, Request} | {dtl, Template, Args, Request} | {redirect, Url, Request} | {raw, Status, Headers, Body, Request}
-		{handle, 3}
-		];
-behaviour_info(_Other) ->
-	undefined.
+-callback handle(Method :: binary(), Path :: list(), Request :: #kb_request{}) 
+	-> {html, Value :: iodata(), Request :: #kb_request{}} 
+	| {json, Value :: any(), Request :: #kb_request{}}
+	| {dtl, Template :: module(), Args :: list(), Request :: #kb_request{}}
+	| {redirect, Url :: iolist(), Request :: #kb_request{}} 
+	| {raw, Status :: integer(), Headers :: list(), Body :: iodata(), Request :: #kb_request{}}.
