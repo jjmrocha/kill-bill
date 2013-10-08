@@ -24,20 +24,26 @@
 -export([get_locales/1,
 	set_locale/2]).
 
-get_locales(Req) -> 
+get_locales(Req=#kb_request{locales=none}) -> 
+	{Locales, Req1} = find_locales(Req),
+	{Locales, Req1#kb_request{locales=Locales}};
+get_locales(Req=#kb_request{locales=Locales}) -> {Locales, Req}.
+
+set_locale(Locale, Req) ->
+	Req1 = kb_session_util:set_system_property(?SYSTEM_CHOSEN_LANGUAGE, Locale, Req),
+	Req1#kb_request{locales=Locale, resources=none}.
+
+%% ====================================================================
+%% Internal functions
+%% ====================================================================
+
+find_locales(Req) ->
 	case get_user_locale(Req) of
 		{none, Req1} ->
 			{Locales, Data1} = get_accept_languages(Req1#kb_request.data),
 			{Locales, Req1#kb_request{data=Data1}};
 		{Locale, Req1} -> {[Locale], Req1}
 	end.
-
-set_locale(Locale, Req) ->
-	kb_session_util:set_system_property(?SYSTEM_CHOSEN_LANGUAGE, Locale, Req).
-
-%% ====================================================================
-%% Internal functions
-%% ====================================================================
 
 get_user_locale(Req) -> 
 	{SystemData, Req1} = kb_session_util:get_system_data(Req),

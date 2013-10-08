@@ -31,7 +31,8 @@
 	set_cookie/4, 
 	get_cookie/2,
 	get_locales/1,
-	set_locale/2
+	set_locale/2,
+	get_message/2
 	]).
 
 -spec get_context(Req :: #kb_request{}) -> binary().
@@ -90,15 +91,23 @@ get_cookie(Name, Req) ->
 	{Value, Req1} = kb_http:get_cookie(Name, Req#kb_request.data),
 	{Value, Req#kb_request{data=Req1}}.
 
--spec get_locales(Req :: #kb_request{}) -> {any_locale | Locale, #kb_request{}}
-	when Locale :: {Language :: binary(), Country :: binary()}.
+-spec get_locales(Req :: #kb_request{}) -> {any_locale | Locales, #kb_request{}}
+	when Locales :: [Locale, ...],
+		  Locale :: {Language :: binary(), Country :: binary()}.
 get_locales(Req) ->
-	kb_locale:get_locales(Req).
+	kb_locale:get_locales(Req).				
 
 -spec set_locale(Locale, Req :: #kb_request{}) -> #kb_request{}
 	when Locale :: {Language :: binary(), Country :: binary()}.
 set_locale(Locale, Req) ->
 	kb_locale:set_locale(Locale, Req).
+
+-spec get_message(MsgId :: iolist(), Req :: #kb_request{}) -> {Response, #kb_request{}}
+	when Response :: no_resource
+					| message_not_found
+					| iolist().
+get_message(MsgId, Req) ->
+	kb_resource_util:get_message(MsgId, Req).
 
 %% ====================================================================
 %% Internal functions
