@@ -54,7 +54,7 @@ get_args(Req) when is_record(Req, kb_request) ->
 
 get_session(Req) when is_record(Req, kb_request) ->
 	{SessionData, Req1} = get_session_data(Req),
-	UserData = proplists:get_value(user, SessionData),
+	{_, UserData} = lists:keyfind(user, 1, SessionData),
 	{UserData, Req1}.
 
 set_session(UserData, Req) when is_list(UserData) andalso is_record(Req, kb_request) ->
@@ -84,7 +84,10 @@ get_cookie(Name, Req) when is_binary(Name) andalso is_record(Req, kb_request) ->
 
 get_locale(Req) when is_record(Req, kb_request) ->
 	{SystemData, Req1} = get_system_data(Req),
-	ChosenLanguage = proplists:get_value(?SYSTEM_CHOSEN_LANGUAGE, SystemData, none),
+	ChosenLanguage = case lists:keyfind(?SYSTEM_CHOSEN_LANGUAGE, 1, SystemData) of
+		false -> none;
+		{_, Lang} -> Lang
+	end,
 	{ChosenLanguage, Req1}.
 
 set_locale(Locale, Req) when is_tuple(Locale) andalso is_record(Req, kb_request) ->
@@ -102,7 +105,7 @@ set_system_property(Key, Value, Req) when is_atom(Key) andalso is_record(Req, kb
 
 get_system_data(Req) when is_record(Req, kb_request) ->
 	{SessionData, Req1} = get_session_data(Req),
-	SystemData = proplists:get_value(system, SessionData),
+	{_, SystemData} = lists:keyfind(system, 1, SessionData),
 	{SystemData, Req1}.
 
 get_session_data(Req) when is_record(Req, kb_request) ->
