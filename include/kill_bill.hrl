@@ -16,6 +16,9 @@
 
 -define(SYSTEM_CHOSEN_LANGUAGE, chosen_language).
 
+-define(ANY_LOCALE, any_locale).
+-define(NO_COUNTRY_IN_LOCALE, none).
+
 -record(kb_request, {
 				context,
 				resource_server,

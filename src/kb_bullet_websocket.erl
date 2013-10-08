@@ -21,7 +21,7 @@
 init(_Transport, Req, Opts, _Active) ->
 	{_, Webclient} = lists:keyfind(webclient_app, 1, Opts),
 	{_, SessionManager} = lists:keyfind(session_manager, 1, Opts),
-	{Session, Req2} = kb_session:get_session_id(SessionManager, Req),
+	{Session, Req2} = kb_session:get_session_id(Req),
 	case kb_webclient:client_connect(Webclient, Session) of
 		ok -> {ok, Req2, {Webclient, SessionManager}};
 		{refuse, Reason} -> 

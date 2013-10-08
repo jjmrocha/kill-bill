@@ -45,7 +45,7 @@ handle(_Method, [<<"google">>], Req) ->
 	{redirect, <<"http://www.google.com">>, Req};
 
 handle(_Method, [<<"locale">>, Language], Req) ->
-	Req1 = kb_action_helper:set_locale({binary_to_list(Language), none}, Req),
+	Req1 = kb_action_helper:set_locale({Language, none}, Req),
 	Output = io_lib:format("<html><body><a href=\"~s\">back</a></body></html>", [kb_action_helper:get_context(Req1)]),
 	{html, Output, Req1};
 
