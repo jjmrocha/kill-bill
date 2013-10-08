@@ -16,4 +16,7 @@
 	<p>{% message key="args_list_empty_list" %}</p>
 {% endif %}
 
+<br>
+<a href="{% context %}">{% message key="back" to="key=to_index" %}</a>
+
 {% endblock %}

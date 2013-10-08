@@ -21,6 +21,9 @@
 {<<"form_field_id">>, <<"ID">>},
 {<<"form_field_name">>, <<"Nome">>},
 {<<"form_submit">>, <<"Enviar">>},
-{<<"form_empty_list">>, <<"Sem dados">>}
+{<<"form_empty_list">>, <<"Sem dados">>},
+
+{<<"back">>, <<"Voltar para o {to}">>},
+{<<"to_index">>, <<"Indice">>}
 
 ].
