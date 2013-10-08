@@ -16,37 +16,25 @@
 
 -module(kb_webclient_handler).
 
--export([behaviour_info/1]).
+-include("kill_bill.hrl").
 
-behaviour_info(callbacks) ->
-	[
-		% INPUT: WebClientContext
-		% OUTPUT: {ok, State}
-		{handle_init, 1},
-		
-		% INPUT: Client, SessionID, State
-		% OUTPUT: {ok, State} | {refuse, Reason :: term(), State}
-		{handle_client_connect, 3}, 
-		
-		% INPUT: Client, Msg, State
-		% OUTPUT: {ok, State} 
-		{handle_client_cast, 3}, 
-		
-		% INPUT: Client, State
-		% OUTPUT: {ok, State} 
-		{handle_client_disconnect, 2},
-		
-		% INPUT: Msg, State
-		% OUTPUT: {ok, State} 
-		{handle_app_cast, 2},
-		
-		% INPUT: Msg, State
-		% OUTPUT: {reply, Reply, State} 
-		{handle_app_call, 2},
-		
-		% INPUT: State
-		% OUTPUT: {ok, State}
-		{handle_terminate, 1}
-	];
-behaviour_info(_Other) ->
-	undefined.
+-callback handle_init(WebClientContext :: #kb_webclient_context{}) 
+	-> {ok, State :: term()}.
+
+-callback handle_client_connect(Client :: pid(), SessionID :: binary(), State :: term()) 
+	-> {ok, State :: term()} 
+	| {refuse, Reason :: term(), State :: term()}.
+
+-callback handle_client_cast(Client :: pid(), Msg :: term(), State :: term()) 
+	-> {ok, State :: term()}.
+
+-callback handle_client_disconnect(Client :: pid(), State :: term()) 
+	-> {ok, State :: term()}.
+
+-callback handle_app_cast(Msg :: term(), State :: term()) 
+	-> {ok, State :: term()}.
+
+-callback handle_app_call(Msg :: term(), State :: term()) 
+	-> {ok, State :: term()}.
+
+-callback handle_terminate(State :: term()) -> ok.

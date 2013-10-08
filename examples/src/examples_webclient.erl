@@ -44,7 +44,7 @@ handle_app_call(Msg, State) ->
 
 handle_terminate(State) ->
 	error_logger:info_msg("~p: handle_terminate()\n", [?MODULE]),
-	{ok, State}.
+	ok.
 
 %% ====================================================================
 %% Internal functions
