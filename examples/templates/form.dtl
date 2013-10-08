@@ -33,4 +33,7 @@
 	<p>{% message key="form_empty_list" %}</p>
 {% endif %}
 
+<br>
+<a href="{% context %}">{% message key="back" to="key=to_index" %}</a>
+
 {% endblock %}

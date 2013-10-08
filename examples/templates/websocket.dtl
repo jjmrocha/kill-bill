@@ -19,6 +19,9 @@
 	&nbsp;
 </p>
 
+<br>
+<a href="{% context %}">{% message key="back" to="key=to_index" %}</a>
+
 <script type="text/javascript">
 	function write(msg) {
 		var pre = document.createElement("p");

@@ -32,7 +32,8 @@
 	get_cookie/2,
 	get_locales/1,
 	set_locale/2,
-	get_message/2
+	get_message/2,
+	get_message/3
 	]).
 
 -spec get_context(Req :: #kb_request{}) -> binary().
@@ -108,6 +109,15 @@ set_locale(Locale, Req) ->
 					| iolist().
 get_message(MsgId, Req) ->
 	kb_resource_util:get_message(MsgId, Req).
+
+-spec get_message(MsgId :: iolist(), Args, Req :: #kb_request{}) -> {Response, #kb_request{}}
+	when Args :: [Arg, ...],
+		 Arg :: {Search :: binary(), Replace :: binary()},
+		 Response :: no_resource
+					| message_not_found
+					| iolist().
+get_message(MsgId, Args, Req) ->
+	kb_resource_util:get_message(MsgId, Args, Req).
 
 %% ====================================================================
 %% Internal functions
