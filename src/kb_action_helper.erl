@@ -25,6 +25,7 @@
 	get_context/1,
 	get_headers/1,
 	get_args/1, 
+	get_json/1, 
 	get_session/1,
 	set_session/2,
 	invalidate_session/1,
@@ -58,6 +59,12 @@ get_args(Req) ->
 			{BodyQS, Req#kb_request{data=Req1}};
 		_ -> {[], Req}
 	end.
+
+-spec get_json(Req :: #kb_request{}) -> {jsondoc:jsondoc(), #kb_request{}}.
+get_json(Req) ->
+	{ok, Body, Req1} = cowboy_req:body(Req#kb_request.data),
+	JSon = kb_json:decode(Body),
+	{JSon, Req#kb_request{data=Req1}}.
 
 -spec get_session(Req :: #kb_request{}) -> {SessionData, #kb_request{}}
 	when SessionData :: [{any(), any()}, ...].
