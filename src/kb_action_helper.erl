@@ -82,7 +82,7 @@ get_json(Req) ->
 			{JSon, Req1};
 		_ ->
 			{ContentType, Req1} = get_content_type(Req),
-			case ContentType of
+			case mime_type(ContentType) of
 				?JSON_CONTENT_TYPE ->
 					{ok, Body, Data1} = cowboy_req:body(Req1#kb_request.data),
 					JSon = kb_json:decode(Body),
@@ -158,3 +158,8 @@ get_message(MsgId, Args, Req) ->
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
+
+mime_type(ContentType) ->
+	Parts = binary:split(ContentType, <<";">>),
+	[Mime|_] = Parts,
+	Mime.
