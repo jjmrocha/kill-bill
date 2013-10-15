@@ -18,12 +18,17 @@
 
 -include("kill_bill.hrl").
 
+-define(CONTENT_TYPE_HEADER, <<"content-type">>).
+-define(FORM_CONTENT_TYPE, <<"application/x-www-form-urlencoded">>).
+-define(JSON_CONTENT_TYPE, <<"application/json">>).
+
 %% ====================================================================
 %% API functions
 %% ====================================================================
 -export([
 	get_context/1,
 	get_headers/1,
+	get_content_type/1,
 	get_args/1, 
 	get_json/1, 
 	get_session/1,
@@ -44,27 +49,51 @@ get_context(Req) ->
 -spec get_headers(Req :: #kb_request{}) -> {Headers, #kb_request{}}
 	when Headers :: [{binary(), binary()}, ...].
 get_headers(Req) ->
-	{Headers, Req1} = cowboy_req:headers(Req#kb_request.data),
-	{Headers, Req#kb_request{data=Req1}}.
+	{Headers, Data1} = cowboy_req:headers(Req#kb_request.data),
+	{Headers, Req#kb_request{data=Data1}}.
+
+-spec get_content_type(Req :: #kb_request{}) -> {binary(), #kb_request{}}.
+get_content_type(Req) ->
+	{Headers, Req1} = get_headers(Req),
+	case lists:keyfind(?CONTENT_TYPE_HEADER, 1, Headers) of
+		false -> {<<>>, Req1};
+		{_, Content} -> {Content, Req1}
+	end.
 
 -spec get_args(Req :: #kb_request{}) -> {Args, #kb_request{}}
 	when Args :: [{binary(), binary()}, ...].
 get_args(Req) ->
 	case Req#kb_request.method of
 		<<"GET">> ->
-			{QSVals, Req1} = cowboy_req:qs_vals(Req#kb_request.data),
-			{QSVals, Req#kb_request{data=Req1}};
+			{QSVals, Data1} = cowboy_req:qs_vals(Req#kb_request.data),
+			{QSVals, Req#kb_request{data=Data1}};
 		<<"POST">> ->
-			{ok, BodyQS, Req1} = cowboy_req:body_qs(Req#kb_request.data),
-			{BodyQS, Req#kb_request{data=Req1}};
+			{ok, BodyQS, Data1} = cowboy_req:body_qs(Req#kb_request.data),
+			{BodyQS, Req#kb_request{data=Data1}};
 		_ -> {[], Req}
 	end.
 
 -spec get_json(Req :: #kb_request{}) -> {jsondoc:jsondoc(), #kb_request{}}.
 get_json(Req) ->
-	{ok, Body, Req1} = cowboy_req:body(Req#kb_request.data),
-	JSon = kb_json:decode(Body),
-	{JSon, Req#kb_request{data=Req1}}.
+	case Req#kb_request.method of
+		<<"GET">> ->
+			{Args, Req1} = get_args(Req),
+			JSon = jsondoc:from_proplist(Args),
+			{JSon, Req1};
+		_ ->
+			{ContentType, Req1} = get_content_type(Req),
+			case ContentType of
+				?JSON_CONTENT_TYPE ->
+					{ok, Body, Data1} = cowboy_req:body(Req1#kb_request.data),
+					JSon = kb_json:decode(Body),
+					{JSon, Req1#kb_request{data=Data1}};
+				?FORM_CONTENT_TYPE ->
+					{Args, Req2} = get_args(Req1),
+					JSon = jsondoc:from_proplist(Args),
+					{JSon, Req2};
+				_ -> {jsondoc:new(), Req1}
+			end
+	end.
 
 -spec get_session(Req :: #kb_request{}) -> {SessionData, #kb_request{}}
 	when SessionData :: [{any(), any()}, ...].
@@ -78,8 +107,8 @@ set_session(UserData, Req) ->
 
 -spec set_cookie(Name :: binary(), Value :: term(), MaxAge :: integer(), Req :: #kb_request{}) -> #kb_request{}.
 set_cookie(Name, Value, MaxAge, Req) when is_binary(Value) ->
-	Req1 = kb_http:set_cookie(Req#kb_request.context, Name, Value, MaxAge, Req#kb_request.data),
-	Req#kb_request{data=Req1};
+	Data1 = kb_http:set_cookie(Req#kb_request.context, Name, Value, MaxAge, Req#kb_request.data),
+	Req#kb_request{data=Data1};
 set_cookie(Name, Value, MaxAge, Req) ->
 	set_cookie(Name, term_to_binary(Value), MaxAge, Req).
 
@@ -96,8 +125,8 @@ invalidate_session(Req) ->
 
 -spec get_cookie(Name :: binary(), Req :: #kb_request{}) -> {binary(), #kb_request{}}.
 get_cookie(Name, Req) ->
-	{Value, Req1} = kb_http:get_cookie(Name, Req#kb_request.data),
-	{Value, Req#kb_request{data=Req1}}.
+	{Value, Data1} = kb_http:get_cookie(Name, Req#kb_request.data),
+	{Value, Req#kb_request{data=Data1}}.
 
 -spec get_locales(Req :: #kb_request{}) -> {any_locale | Locales, #kb_request{}}
 	when Locales :: [Locale, ...],
