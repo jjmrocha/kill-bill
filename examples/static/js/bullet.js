@@ -48,7 +48,7 @@
 		}
 
 		var sendUrl = url.replace('ws:', 'http:').replace('wss:', 'https:');
-
+		var self = this;
 		$.ajax({
 			async: false,
 			cache: false,
@@ -59,8 +59,8 @@
 			contentType: 'application/x-www-form-urlencoded; charset=utf-8',
 			headers: {'X-Socket-Transport': 'xhrPolling'},
 			success: function(data){
-				if (data.length !== 0){
-					fake.onmessage({'data': data});
+				if (data && data.length !== 0){
+					self.onmessage({'data': data});
 				}
 			}
 		});
@@ -181,7 +181,7 @@
 							fake.onopen(fake);
 						}
 						// Connection might have closed without a response body
-						if (data.length !== 0){
+						if (data && data.length !== 0){
 							fake.onmessage({'data': data});
 						}
 						if (fake.readyState == OPEN){

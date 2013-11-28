@@ -42,7 +42,7 @@ handle_app_call(Msg, State) ->
 	error_logger:info_msg("~p: handle_app_call(~p)\n", [?MODULE, Msg]),
 	{reply, Msg, State}.
 
-handle_terminate(State) ->
+handle_terminate(_State) ->
 	error_logger:info_msg("~p: handle_terminate()\n", [?MODULE]),
 	ok.
 
