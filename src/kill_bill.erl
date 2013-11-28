@@ -497,10 +497,10 @@ add_static(StaticConfig, Context, Paths) ->
 	Path = proplists:get_value(path, StaticConfig, "/"), 
 	Dir = proplists:get_value(dir, StaticConfig, "./static"),
 	lists:append([
-			{get_static_match(Path, Context), cowboy_static, [
-					{directory, Dir},
-					{mimetypes, {fun mimetypes:path_to_mimes/2, default}}
-					]}
+			{get_static_match(Path, Context), cowboy_static, 
+				{dir, Dir,[
+						{mimetypes, cow_mimetypes, all}
+						]}}
 			], Paths).
 
 get_static_match(Path, Context) ->
