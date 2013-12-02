@@ -16,31 +16,8 @@
 
 {application, kill_bill, [
 	{description, "Kill Bill - Web Application Server"},
-	{vsn, "0.7.0"},
-	{modules, [
-		kb_action_handler,
-		kb_action_helper,
-		kb_bullet_websocket,
-		kb_cowboy_action,
-		kb_cowboy_template,
-		kb_cowboy_toppage,
-		kb_dtl_util,
-		kb_dummy_toppage,
-		kb_http,
-		kb_json,
-		kb_resource,
-		kb_resource_sup,
-		kb_response,
-		kb_session,
-		kb_template_util,
-		kb_util,
-		kb_webclient,
-		kb_webclient_handler,
-		kb_webclient_helper,
-		kb_webclient_sup,
-		kill_bill_app,
-		kill_bill,
-		kill_bill_sup			
+	{vsn, "0.8.0"},
+	{modules, [	
 	]},
 	{registered, [ 
 		kill_bill, 
