@@ -55,6 +55,7 @@ get_user_locale(Req) ->
 
 get_accept_languages(Req) ->
 	{AcceptLanguages, Req1} = kb_http:get_header(<<"accept-language">>, Req),
+	io:format("~p~n", [AcceptLanguages]),
 	case AcceptLanguages of
 		undefined -> {[], Req1};
 		_ ->
@@ -78,7 +79,7 @@ get_locales([H|T], List) ->
 		Locale -> get_locales(T, [Locale|List])
 	end.
 
-get_locale(<<"*">>) -> ?ANY_LOCALE;
+get_locale('*') -> ?ANY_LOCALE;
 get_locale(AcceptLanguage) ->
 	case binary:split(AcceptLanguage, [<<"-">>]) of
 		[Language] -> {Language, ?NO_COUNTRY_IN_LOCALE};
