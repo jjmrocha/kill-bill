@@ -55,7 +55,6 @@ get_user_locale(Req) ->
 
 get_accept_languages(Req) ->
 	{AcceptLanguages, Req1} = kb_http:get_header(<<"accept-language">>, Req),
-	io:format("~p~n", [AcceptLanguages]),
 	case AcceptLanguages of
 		undefined -> {[], Req1};
 		_ ->
