@@ -84,9 +84,9 @@ load_resources(Config, Store) ->
 add_resources(_Dir, _Basename, _Extension, [], Store) -> Store;
 add_resources(Dir, Basename, Extension, [Filename|Tail], Store) ->
 	FullName = filename:join(Dir, Filename),
-	Locale = get_locale_from_filename(Basename, Extension, Filename),
 	case file:script(FullName) of
 		{ok, ValueList} ->
+			Locale = get_locale_from_filename(Basename, Extension, Filename),
 			NStore = dict:store(Locale, convert_to_dict(ValueList), Store),
 			add_resources(Dir, Basename, Extension, Tail, NStore);
 		{error, {Line, _Mod, _Term}} ->

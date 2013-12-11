@@ -48,11 +48,11 @@ get_message(MsgId, Args, Req) ->
 			end
 	end.
 
-replace(Message, []) -> Message;
 replace(Message, [{Key, Value}|T]) ->
 	SKey = get_search_key(Key),
 	NewMsg = re:replace(Message, SKey, Value, [global, {return, binary}]),
-	replace(NewMsg, T).
+	replace(NewMsg, T);
+replace(Message, []) -> Message.
 
 %% ====================================================================
 %% Internal functions

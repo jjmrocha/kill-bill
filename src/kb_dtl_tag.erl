@@ -52,12 +52,12 @@ context(Args, Options) ->
 %% Internal functions
 %% ====================================================================
 
-get_message_args([], _Dict, Out) -> Out;
 get_message_args([{key, _}|T], Dict, Out) -> get_message_args(T, Dict, Out);
 get_message_args([{Arg, Value}|T], Dict, Out) ->
 	BinArg = atom_to_binary(Arg, utf8),
 	NewValue = transform_value(Value, Dict),
-	get_message_args(T, Dict, [{BinArg, NewValue}|Out]).
+	get_message_args(T, Dict, [{BinArg, NewValue}|Out]);
+get_message_args([], _Dict, Out) -> Out.
 
 transform_value(Value = <<"key=", Key/binary>>, Dict) ->
 	case dict:find(Key, Dict) of
