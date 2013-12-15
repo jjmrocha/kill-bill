@@ -200,7 +200,6 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 						true ->
 							Host = get_host(NServer#server.config),
 							PathsList = get_server_paths(ServerName, Host, NServer, NWebapps),
-							
 							Dispatch = cowboy_router:compile([{Host, PathsList}]),
 							cowboy:set_env(ServerName, dispatch, Dispatch);
 						false -> ok
@@ -438,12 +437,12 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	WebclientConfig = proplists:get_value(webclient, WebApp#webapp.config, []),
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
 	
-	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths),
+	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, []),
 	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, SessionManager, PathsWithTemplate),
 	PathsWithWebcliente = add_webclient(WebclientConfig, Context, WebApp#webapp.webclients, SessionManager, PathsWithAction) ,
 	PathsWithStatic = add_static(StaticConfig, Context, PathsWithWebcliente),
 	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> A < B end, PathsWithStatic),
-	get_web_app_config(T, Sorted).
+	get_web_app_config(T, lists:append(Sorted, Paths)).
 
 add_template(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
 add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths) ->
