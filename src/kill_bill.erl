@@ -448,19 +448,25 @@ add_template(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
 add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths) ->
 	TemplatePrefix = proplists:get_value(prefix, TemplateConfig, "page"),
 	TopPage = proplists:get_value(top_page, TemplateConfig, "index"),
+	NPaths = add_top_page(TopPage, Context, ResourceServer, SessionManager, Paths),
+	lists:append([
+			{get_template_match(TemplatePrefix, Context), kb_cowboy_template, [
+					{resource_server, ResourceServer},
+					{context, Context},
+					{session_manager, SessionManager}
+					]}
+			], NPaths).
+
+add_top_page(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
+add_top_page(TopPage, Context, ResourceServer, SessionManager, Paths) -> 
 	lists:append([
 			{Context, kb_cowboy_toppage, [
 					{resource_server, ResourceServer}, 
 					{top_page, TopPage},
 					{context, Context},
 					{session_manager, SessionManager}
-					]},
-			{get_template_match(TemplatePrefix, Context), kb_cowboy_template, [
-					{resource_server, ResourceServer},
-					{context, Context},
-					{session_manager, SessionManager}
 					]}
-			], Paths).
+			], Paths).	
 
 get_template_match(TemplatePrefix, Context) ->
 	Context ++ remove_slashs(TemplatePrefix) ++ "/[...]".
