@@ -38,6 +38,7 @@
 	get_cookie/2,
 	get_locales/1,
 	set_locale/2,
+	best_locale/3,
 	get_message/2,
 	get_message/3
 	]).
@@ -155,6 +156,13 @@ get_message(MsgId, Req) ->
 get_message(MsgId, Args, Req) ->
 	kb_resource_util:get_message(MsgId, Args, Req).
 
+-spec best_locale(List :: list(), Default :: Locale, Req :: #kb_request{}) -> {Locale, #kb_request{}}
+	when Locale :: {Language :: binary(), Country :: binary()}.
+best_locale(List, Default, Req) ->
+	{Locales, Req1} = get_locales(Req),
+	Best = best(Locales, List, Default),
+	{Best, Req1}.
+
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
@@ -163,3 +171,16 @@ mime_type(ContentType) ->
 	Parts = binary:split(ContentType, <<";">>),
 	[Mime|_] = Parts,
 	Mime.
+
+best(any_locale, _List, Default) -> Default;
+best(Locales, List, Default) -> 
+	Valid = lists:filter(fun(Locale = {Languale, _}) ->
+		case lists:member(Locale, List) of
+			true -> true;
+			false -> lists:member({Languale, ?NO_COUNTRY_IN_LOCALE}, List)
+		end
+	end, Locales),
+	case Valid of
+		[] -> Default;
+		[Locale|_] -> Locale
+	end.
