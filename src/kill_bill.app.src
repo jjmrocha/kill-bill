@@ -16,7 +16,7 @@
 
 {application, kill_bill, [
 	{description, "Kill Bill - Web Application Server"},
-	{vsn, "0.8.1"},
+	{vsn, "0.9.0"},
 	{modules, [	
 	]},
 	{registered, [ 
