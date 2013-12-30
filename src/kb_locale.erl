@@ -22,7 +22,8 @@
 %% API functions
 %% ====================================================================
 -export([get_locales/1,
-	set_locale/2]).
+	set_locale/2,
+	remove_locale/1]).
 
 get_locales(Req=#kb_request{locales=none}) -> 
 	{Locales, Req1} = find_locales(Req),
@@ -32,6 +33,8 @@ get_locales(Req=#kb_request{locales=Locales}) -> {Locales, Req}.
 set_locale(Locale, Req) ->
 	Req1 = kb_session_util:set_system_property(?SYSTEM_CHOSEN_LANGUAGE, Locale, Req),
 	Req1#kb_request{locales=Locale, resources=none}.
+
+remove_locale(Req) -> kb_session_util:remove_system_property(?SYSTEM_CHOSEN_LANGUAGE, Req).
 
 %% ====================================================================
 %% Internal functions

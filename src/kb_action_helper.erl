@@ -38,6 +38,7 @@
 	get_cookie/2,
 	get_locales/1,
 	set_locale/2,
+	remove_locale/1,
 	best_locale/3,
 	get_message/2,
 	get_message/3
@@ -139,6 +140,9 @@ get_locales(Req) ->
 	when Locale :: {Language :: binary(), Country :: binary()}.
 set_locale(Locale, Req) ->
 	kb_locale:set_locale(Locale, Req).
+
+-spec remove_locale(Req :: #kb_request{}) -> #kb_request{}.
+remove_locale(Req) -> kb_locale:remove_locale(Req).
 
 -spec get_message(MsgId :: iolist(), Req :: #kb_request{}) -> {Response, #kb_request{}}
 	when Response :: no_resource

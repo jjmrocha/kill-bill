@@ -26,7 +26,8 @@
 	set_user_data/2,
 	set_user_data/3,
 	get_system_data/1,
-	set_system_property/3]).
+	set_system_property/3,
+	remove_system_property/2]).
 
 get_user_data(Req) ->
 	{SessionData, Req1} = get_session_data(Req),
@@ -65,6 +66,12 @@ set_system_property(Key, Value, Req) ->
 	NSystemData = lists:keystore(Key, 1, SystemData, {Key, Value}),
 	SessionData = lists:keystore(system, 1, Req1#kb_request.session_data, {system, NSystemData}),
 	store_session_data(Req1#kb_request{session_data=SessionData}).
+
+remove_system_property(Key, Req) ->
+	{SystemData, Req1} = get_system_data(Req),
+	NSystemData = lists:keydelete(Key, 1, SystemData),
+	SessionData = lists:keystore(system, 1, Req1#kb_request.session_data, {system, NSystemData}),
+	store_session_data(Req1#kb_request{session_data=SessionData}).	
 
 %% ====================================================================
 %% Internal functions
