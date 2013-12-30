@@ -34,7 +34,10 @@ set_locale(Locale, Req) ->
 	Req1 = kb_session_util:set_system_property(?SYSTEM_CHOSEN_LANGUAGE, Locale, Req),
 	Req1#kb_request{locales=Locale, resources=none}.
 
-remove_locale(Req) -> kb_session_util:remove_system_property(?SYSTEM_CHOSEN_LANGUAGE, Req).
+remove_locale(Req) -> 
+	Req1 = kb_session_util:remove_system_property(?SYSTEM_CHOSEN_LANGUAGE, Req),
+	{Locales, Data1} = get_accept_languages(Req1#kb_request.data),
+	Req1#kb_request{locales=Locales, resources=none, data=Data1}.
 
 %% ====================================================================
 %% Internal functions
