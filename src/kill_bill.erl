@@ -441,8 +441,24 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, SessionManager, PathsWithTemplate),
 	PathsWithWebcliente = add_webclient(WebclientConfig, Context, WebApp#webapp.webclients, SessionManager, PathsWithAction) ,
 	PathsWithStatic = add_static(StaticConfig, Context, PathsWithWebcliente),
-	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> A < B end, PathsWithStatic),
+	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> sort_paths(A, B) end, PathsWithStatic),
 	get_web_app_config(T, lists:append(Sorted, Paths)).
+
+sort_paths(A, B) ->
+	{UA, QA} = fix_path(A),
+	{UB, QB} = fix_path(B),
+	if UA < UB -> true;
+	   UA == UB -> QA > QB;
+	   true -> false
+	end.
+
+fix_path(Path) ->
+	case string:rstr(Path, "[...]") of
+		0 -> {Path, ""};
+		Len -> 
+			Url = string:substr(Path, 1, Len - 1),
+			{Url, "[...]"}
+	end.
 
 add_template(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
 add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths) ->
