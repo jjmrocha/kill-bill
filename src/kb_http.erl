@@ -22,8 +22,11 @@
 -export([get_header/2, get_cookie/2, set_cookie/5]).
 
 get_header(Name, Req) ->
-	{ok, Header, Req1} = cowboy_req:parse_header(Name, Req),
-	{Header, Req1}.
+	case cowboy_req:parse_header(Name, Req) of
+		{ok, Header, Req1} -> {Header, Req1};
+		{undefined, _, Req1} -> {undefined, Req1};
+		_ -> {error, Req}
+	end.
 
 set_cookie(Path, CookieName, Value, MaxAge, Req) ->
 	Opts = case MaxAge of

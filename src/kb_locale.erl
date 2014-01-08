@@ -63,6 +63,7 @@ get_accept_languages(Req) ->
 	{AcceptLanguages, Req1} = kb_http:get_header(<<"accept-language">>, Req),
 	case AcceptLanguages of
 		undefined -> {[], Req1};
+		error -> {[], Req1};
 		_ ->
 			Fun = fun({_TagA, QualityA}, {_TagB, QualityB}) -> 
 					QualityA > QualityB 
