@@ -312,11 +312,11 @@ load_configuration(FileName) ->
 	end.
 
 validate_server_config(Config) ->
-	% TODO Tenho de validar a configuração
+	% TODO Tenho de validar a configuracao
 	{ok, Config}.
 
 validate_webapp_config(Config) ->
-	% TODO Tenho de validar toda a configuração
+	% TODO Tenho de validar toda a configuracao
 	case validate_action(Config) of
 		{ok, NConfig} -> validate_webclient(NConfig);
 		Error -> Error
