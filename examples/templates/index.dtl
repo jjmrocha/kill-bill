@@ -12,9 +12,4 @@
 <a href="{% context %}action/locale/{% message key="index_new_locale" %}">{% message key="index_locale" %}</a><br>
 <a href="{% context %}action/invalidate">{% message key="index_invalidate" %}</a><br>
 
-<br>
-<h1>{% message key="index_websocket" %}</h1>
-<a href="{% context %}page/websocket">{% message key="index_websocket_page" %}</a><br>
-<a href="{% context %}action/client?msg=Hello">{% message key="index_websocket_send" %}</a><br>
-
 {% endblock %}

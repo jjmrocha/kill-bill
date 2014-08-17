@@ -27,7 +27,6 @@
 -export([start_link/0]).
 -export([config_server/1, start_server/1, stop_server/1, get_server_list/0]).
 -export([deploy/2, undeploy/1, get_webapp_list/0]).
--export([cast_webclient/3, call_webclient/3]).
 
 %% ====================================================================
 %% API functions
@@ -75,18 +74,12 @@ undeploy(WebAppName) when is_atom(WebAppName) ->
 get_webapp_list() ->
 	gen_server:call(?MODULE, {get_webapp_list}).
 
-cast_webclient(WebAppName, WebclientName, Msg) when is_atom(WebAppName) andalso is_atom(WebclientName) ->
-	gen_server:cast(?MODULE, {cast_webclient, WebAppName, WebclientName, Msg}).
-
-call_webclient(WebAppName, WebclientName, Msg) when is_atom(WebAppName) andalso is_atom(WebclientName) ->
-	gen_server:call(?MODULE, {call_webclient, WebAppName, WebclientName, Msg}).
-
 %% ====================================================================
 %% Behavioural functions 
 %% ====================================================================
 
 -record(server, {config, webapps = [], running=false}).
--record(webapp, {config, webclients, resource, server, session}).
+-record(webapp, {config, resource, server, session}).
 -record(status, {servers, webapps}).
 
 init([]) ->
@@ -100,16 +93,16 @@ handle_call({config_server, ServerName, Config}, _From, State=#status{servers=Se
 			NServers = dict:store(ServerName, #server{config=Config}, Servers),
 			NState = State#status{servers=NServers},
 			error_logger:info_msg("Server ~p configured: ~p\n", [ServerName, Config]),
-			ok;
+			{ok, ServerName};
 		{ok, #server{running=false, webapps=WebApps}} ->
 			NServers = dict:store(ServerName, #server{config=Config, webapps=WebApps}, Servers),
 			NState = State#status{servers=NServers},
 			error_logger:info_msg("Server ~p reconfigured: ~p\n", [ServerName, Config]),
-			ok;		
+			{ok, ServerName};	
 		{ok, _Server} ->
 			error_logger:error_msg("KB: Server ~p is running\n", [ServerName]),
 			NState = State,
-			server_running
+			{error, server_running}
 	end,
 	{reply, Reply, NState};
 handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
@@ -117,7 +110,7 @@ handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, we
 		error ->			
 			error_logger:error_msg("KB: Server ~p not found\n", [ServerName]),
 			NState = State,
-			not_found;
+			{error, not_found};
 		{ok, #server{running=true}} ->
 			error_logger:info_msg("Server ~p was already running!\n", [ServerName]),
 			NState = State,
@@ -154,7 +147,7 @@ handle_call({stop_server, ServerName}, _From, State=#status{servers=Servers}) ->
 		error ->			
 			error_logger:error_msg("KB: Server ~p not found\n", [ServerName]),
 			NState = State,
-			not_found;
+			{error, not_found};
 		{ok, #server{running=false}} ->
 			error_logger:info_msg("Server ~p was not running!\n", [ServerName]),
 			NState = State,
@@ -185,12 +178,11 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 				error ->
 					error_logger:error_msg("KB: Server ~p not configured\n", [ServerName]),
 					NState = State,
-					duplicated;
+					{error, not_found};
 				{ok, Server} ->
 					Resource = create_resource_server(Config),
 					SessionManager = create_session(WebAppName, Config),					
-					Webclients = create_webclient_server(Config, SessionManager),
-					WebApp = #webapp{config=Config, resource=Resource, webclients=Webclients, server=ServerName, session=SessionManager},
+					WebApp = #webapp{config=Config, resource=Resource, server=ServerName, session=SessionManager},
 					NWebapps = dict:store(WebAppName, WebApp, Webapps),
 					
 					NServer = Server#server{webapps=[WebAppName | Server#server.webapps]},
@@ -212,7 +204,7 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 		{ok, _App} ->
 			error_logger:error_msg("KB: Duplicated webapp ~p\n", [WebAppName]),
 			NState = State,
-			duplicated
+			{error, duplicated}
 	end,
 	{reply, Reply, NState};
 handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapps=Webapps}) ->
@@ -220,7 +212,7 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 		error ->			
 			error_logger:error_msg("KB: WebApp ~p not found\n", [WebAppName]),
 			NState = State,
-			not_found;
+			{error, not_found};
 		{ok, WebApp} ->
 			NWebapps = dict:erase(WebAppName, Webapps),
 			{ok, Server} = dict:find(WebApp#webapp.server, Servers),
@@ -238,7 +230,6 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 			end,
 			
 			stop_resource_server(WebApp#webapp.resource),
-			stop_webclient_server(dict:to_list(WebApp#webapp.webclients)),
 			stop_session(WebApp#webapp.session),
 			
 			error_logger:info_msg("WebApp ~p was undeployed from server ~p\n", [WebAppName, WebApp#webapp.server]),
@@ -255,38 +246,10 @@ handle_call({get_webapp_list}, From, State=#status{webapps=Webapps}) ->
 			gen_server:reply(From, Reply)
 	end,
 	spawn(Fun),
-	{noreply, State};  
-handle_call({call_webclient, WebAppName, WebclientName, Msg}, From, State=#status{webapps=Webapps}) ->
-	case dict:find(WebAppName, Webapps) of
-		error ->
-			error_logger:error_msg("KB: Receive call for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]),
-			{reply, no_webapp, State};
-		{ok, #webapp{webclients=Webclients}} ->
-			case dict:find(WebclientName, Webclients) of
-				error ->
-					error_logger:error_msg("KB: Receive call for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]),
-					{reply, no_webclient, State};
-				{ok, Pid} -> 
-					Fun = fun () ->
-							Reply = kb_webclient:app_call(Pid, Msg),
-							gen_server:reply(From, Reply)
-					end,
-					spawn(Fun),
-					{noreply, State}
-			end
-	end.
+	{noreply, State}.
 
-handle_cast({cast_webclient, WebAppName, WebclientName, Msg}, State=#status{webapps=Webapps}) ->
-	case dict:find(WebAppName, Webapps) of
-		error ->
-			error_logger:error_msg("KB: Receive cast for WebApp ~p, but WebApp is not deployed!\n", [WebAppName]);		
-		{ok, #webapp{webclients=Webclients}} ->
-			case dict:find(WebclientName, Webclients) of
-				error ->
-					error_logger:error_msg("KB: Receive cast for Webclient ~p, but Webclient not exists on WebApp ~p!\n", [WebclientName, WebAppName]);
-				{ok, Pid} -> kb_webclient:app_cast(Pid, Msg)
-			end
-	end,
+handle_cast(Msg, State) ->
+	error_logger:info_msg("handle_cast(~p)\n", [Msg]),
 	{noreply, State}.
 
 handle_info(Info, State) ->
@@ -375,15 +338,6 @@ get_resource_server(ResourceConfig) ->
 stop_resource_server(none) -> ok;
 stop_resource_server(Pid) -> kb_resource:stop(Pid).
 
-create_webclient_server(WebAppConfig, SessionManager) ->
-	WebClientConfig = proplists:get_value(webclient, WebAppConfig, []),
-	get_webclient_server(WebClientConfig, SessionManager, dict:new()).
-
-get_webclient_server([], _SessionManager, Dict) -> Dict;
-get_webclient_server([{WebClient, _prefix, Callback}| T], SessionManager, Dict) ->
-	{ok, Pid} = kb_webclient_sup:start_webclient(Callback, SessionManager),
-	get_webclient_server(T, SessionManager, dict:store(WebClient, Pid, Dict)).
-
 create_session(WebAppName, WebAppConfig) ->
 	SessionCache = list_to_atom(atom_to_list(WebAppName) ++ "_session"),
 	SessionTimeout = proplists:get_value(session_timeout, WebAppConfig, 30),
@@ -393,11 +347,6 @@ create_session(WebAppName, WebAppConfig) ->
 			{sync_mode, full}],
 	gibreel:create_cache(SessionCache, Options),
 	SessionCache.
-
-stop_webclient_server([]) -> ok;
-stop_webclient_server([{_WebClient, Pid}|T]) -> 
-	kb_webclient:stop(Pid),
-	stop_webclient_server(T).
 
 stop_session(SessionCache) ->
 	gibreel:delete_cache(SessionCache).
@@ -434,13 +383,11 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	SessionManager = WebApp#webapp.session,
 	TemplateConfig = proplists:get_value(template, WebApp#webapp.config, none),
 	ActionConfig = proplists:get_value(action, WebApp#webapp.config, []),
-	WebclientConfig = proplists:get_value(webclient, WebApp#webapp.config, []),
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
 	
 	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, []),
 	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, SessionManager, PathsWithTemplate),
-	PathsWithWebcliente = add_webclient(WebclientConfig, Context, WebApp#webapp.webclients, SessionManager, PathsWithAction) ,
-	PathsWithStatic = add_static(StaticConfig, Context, PathsWithWebcliente),
+	PathsWithStatic = add_static(StaticConfig, Context, PathsWithAction),
 	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> sort_paths(A, B) end, PathsWithStatic),
 	get_web_app_config(T, lists:append(Sorted, Paths)).
 
@@ -501,18 +448,6 @@ add_action([{ActionPrefix, Callback}|T], Context, ResourceServer, SessionManager
 
 get_action_match(ActionPrefix, Context) ->
 	Context ++ remove_slashs(ActionPrefix) ++ "/[...]".
-
-add_webclient([], _Context, _App, _SessionManager, Paths) -> Paths;
-add_webclient([{WebclientName, WebclientPrefix, _Callback}|T], Context, Webapps, SessionManager, Paths) ->
-	{ok, Pid} = dict:find(WebclientName, Webapps),
-	NPaths = lists:append([
-				{string:concat(Context, remove_slashs(WebclientPrefix)), bullet_handler, [
-						{webclient_app, Pid},
-						{session_manager, SessionManager},
-						{handler, kb_bullet_websocket}
-						]}
-				], Paths),
-	add_webclient(T, Context, Webapps, SessionManager, NPaths).
 
 add_static(none, _Context, Paths) -> Paths;
 add_static(StaticConfig, Context, Paths) ->

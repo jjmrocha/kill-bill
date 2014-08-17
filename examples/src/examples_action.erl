@@ -54,12 +54,6 @@ handle(_Method, [<<"invalidate">>], Req) ->
 	Output = io_lib:format("<html><body><a href=\"~s\">back</a></body></html>", [kb_action_helper:get_context(Req1)]),
 	{html, Output, Req1};
 
-handle(_Method, [<<"client">>], Req) ->
-	{Args, Req1} = kb_action_helper:get_args(Req),
-	Msg = proplists:get_value(<<"msg">>, Args, <<"Hello 2">>),
-	kill_bill:cast_webclient(examples, client, Msg), 
-	{html, "<html><body>Done!</body></html>", Req1};
-
 handle(_Method, _Path, Req) ->
 	{raw, 404, [], "Not found!", Req}.
 
