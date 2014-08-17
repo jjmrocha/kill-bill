@@ -10,9 +10,6 @@
 {<<"index_locale">>, <<"Change language to &quot;pt&quot;">>},
 {<<"index_invalidate">>, <<"Session invalidate">>},
 {<<"index_new_locale">>, <<"pt">>},
-{<<"index_websocket">>, <<"Websocket Client">>},
-{<<"index_websocket_page">>, <<"Client page">>},
-{<<"index_websocket_send">>, <<"Send message to all clients">>},
 
 {<<"args_list_title">>, <<"GET parameters">>},
 {<<"args_list_empty_list">>, <<"No parameters">>},

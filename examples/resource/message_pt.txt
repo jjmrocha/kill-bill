@@ -10,9 +10,6 @@
 {<<"index_locale">>, <<"Mudar o idioma para &quot;en&quot;">>},
 {<<"index_invalidate">>, <<"Invalidar sess&atilde;o">>},
 {<<"index_new_locale">>, <<"en">>},
-{<<"index_websocket">>, <<"Cliente Websocket">>},
-{<<"index_websocket_page">>, <<"P&aacute;gina cliente">>},
-{<<"index_websocket_send">>, <<"Enviar mensagem para todos os clientes">>},
 
 {<<"args_list_title">>, <<"Par&acirc;metros do GET">>},
 {<<"args_list_empty_list">>, <<"Sem par&acirc;metros">>},

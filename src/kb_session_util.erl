@@ -22,9 +22,7 @@
 %% API functions
 %% ====================================================================
 -export([get_user_data/1,
-	get_user_data/2,
 	set_user_data/2,
-	set_user_data/3,
 	get_system_data/1,
 	set_system_property/3,
 	remove_system_property/2]).
@@ -34,27 +32,10 @@ get_user_data(Req) ->
 	{_, UserData} = lists:keyfind(user, 1, SessionData),
 	{UserData, Req1}.
 
-get_user_data(SessionID, Ctx) ->
-	case get_session_data(Ctx#kb_webclient_context.session_manager, SessionID) of
-		session_expired -> session_expired;
-		SessionData -> 
-			{_, UserData} = lists:keyfind(user, 1, SessionData),
-			UserData
-	end.
-
 set_user_data(UserData, Req) ->
 	{SessionData, Req1} = get_session_data(Req),
 	NSessionData = lists:keystore(user, 1, SessionData, {user, UserData}),
 	store_session_data(Req1#kb_request{session_data=NSessionData}).
-
-set_user_data(SessionID, UserData, Ctx) ->
-	case get_session_data(Ctx#kb_webclient_context.session_manager, SessionID) of
-		session_expired -> session_expired;
-		SessionData -> 
-			NSessionData = lists:keystore(user, 1, SessionData, {user, UserData}),
-			g_cache:store(Ctx#kb_webclient_context.session_manager, SessionID, NSessionData),
-			ok
-	end.
 
 get_system_data(Req) ->
 	{SessionData, Req1} = get_session_data(Req),
@@ -76,12 +57,6 @@ remove_system_property(Key, Req) ->
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
-
-get_session_data(CacheName, SessionID) ->
-	case g_cache:get(CacheName, SessionID) of
-		{ok, SessionData} -> SessionData;
-		_ -> session_expired
-	end.
 
 get_session_data(Req) when is_record(Req, kb_request) ->
 	case Req#kb_request.session_data of 
