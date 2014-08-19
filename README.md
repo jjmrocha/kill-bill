@@ -74,6 +74,7 @@ kill_bill:get_server_list() -> list().
 ```
 
 Where:
+
 * ServerName - **Server name (it's an atom and is mandatory)**
 * Host - **Host (defaults to '_' - all hosts), examples: "127.0.0.1", "www.gmailbox.org" or "[www.]gmailbox.org"**
 * Protocol - **Http protocol (http or https - defaults to http)**
@@ -125,6 +126,7 @@ kill_bill:get_webapp_list() -> WebAppList
 ```
 
 Where:
+
 * WebAppName - **WebApp name (it's an atom and is mandatory)**
 * Context - **WebApp context (defaults to "/")**
 * TemplateConfig - **Erlydtl template access configuration (defaults to none), it's a proplist with the following properties: top_page and prefix**
@@ -170,6 +172,7 @@ handle(Method :: binary(), Path :: list(), Request :: #kb_request{})
 ```
 
 Parameters:
+
 * Method - **HTTP Method (GET, POST, ...)**
 * Path - **The URL split by "/", i.e. the request ```GET /shop/hardware``` will produce the path = [<<"shop">>, <<"hardware">>]**
 * Request - **Record with the request data**
