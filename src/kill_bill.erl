@@ -35,6 +35,9 @@
 start_link() ->
 	gen_server:start_link(?SERVER, ?MODULE, [], []).
 
+-spec config_server(ServerConfig :: Config) -> {ok, ServerName :: atom()} | {error, Reason :: any()} 
+	when Config :: ConfigFile :: string()
+                 | {server_config, ServerName :: atom(), Config :: list()}.
 config_server({server_config, ServerName, Config}) when is_atom(ServerName) andalso is_list(Config) ->
 	case validate_server_config(Config) of
 		{ok, NConfig} -> gen_server:call(?MODULE, {config_server, ServerName, NConfig});
@@ -47,15 +50,21 @@ config_server(FileName) when is_list(FileName) ->
 		{ok, Config} ->	config_server(Config)
 	end.
 
+-spec start_server(ServerName :: atom()) -> ok | {error, Reason :: any()}.
 start_server(ServerName) when is_atom(ServerName) ->
 	gen_server:call(?MODULE, {start_server, ServerName}).
 
+-spec stop_server(ServerName :: atom()) -> ok | {error, Reason :: any()}.
 stop_server(ServerName) when is_atom(ServerName) ->
 	gen_server:call(?MODULE, {stop_server, ServerName}).
 
+-spec get_server_list() -> list().
 get_server_list() ->
 	gen_server:call(?MODULE, {get_server_list}).
 
+-spec deploy(ServerName :: atom(), WebAppConfig :: Config) -> ok | {error, Reason :: any()} 
+	when Config :: WebAppFile :: string()
+                 | {webapp_config, WebAppName :: atom(), Config :: list()}.	  
 deploy(ServerName, {webapp_config, WebAppName, Config}) when is_atom(ServerName) andalso is_atom(WebAppName) andalso is_list(Config) ->
 	case validate_webapp_config(Config) of
 		{ok, NConfig} -> gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, NConfig}});
@@ -68,9 +77,11 @@ deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) 
 		{ok, Config} -> deploy(ServerName, Config)
 	end.
 
+-spec undeploy(WebAppName :: atom()) -> ok | {error, Reason :: any()}.
 undeploy(WebAppName) when is_atom(WebAppName) ->
 	gen_server:call(?MODULE, {undeploy, WebAppName}).
 
+-spec get_webapp_list() -> list().
 get_webapp_list() ->
 	gen_server:call(?MODULE, {get_webapp_list}).
 
