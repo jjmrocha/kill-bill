@@ -16,7 +16,7 @@
 
 {application, kill_bill, [
 	{description, "Kill Bill - Web Application Server"},
-	{vsn, "1.0.0"},
+	{vsn, "1.0.1"},
 	{modules, [	
 	]},
 	{registered, [ 
@@ -33,10 +33,7 @@
 		cowboy,
 		columbo,
 		cclock,
-		gibreel,
-		erlydtl,
-		jiffy,
-		jsondoc
+		gibreel
 	]},
 	{mod, {kill_bill_app, []}}
 ]}.
