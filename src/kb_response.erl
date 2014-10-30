@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-14 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -26,9 +26,10 @@
 handle({html, Value, Req}) -> 
 	handle({raw, 200, [{<<"content-type">>, <<"text/html">>}], Value, Req});
 
-handle({json, Value, Req}) -> 
+handle({json, Value, Req}) -> handle({json, 200, Value, Req});
+handle({json, Status, Value, Req}) -> 
 	Output = kb_json:encode(Value),
-	handle({raw, 200, [{<<"content-type">>, <<"application/json">>}], Output, Req});
+	handle({raw, Status, [{<<"content-type">>, <<"application/json">>}], Output, Req});
 
 handle({dtl, Template, Args, Req}) ->
 	{Dict, Req1} = kb_resource_util:get_dict(Req),
@@ -57,6 +58,7 @@ handle({raw, Status, Headers, Body, Req}) ->
 %% Internal functions
 %% ====================================================================
 
+session_touch(#kb_request{session_manager=none, data=Req}) -> {ok, Req};
 session_touch(#kb_request{session_saved=yes, data=Req}) -> {ok, Req};
 session_touch(#kb_request{session_manager=SessionManager, session_key=none, data=Req}) -> 
 	kb_session:touch_session(SessionManager, Req);

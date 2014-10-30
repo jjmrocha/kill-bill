@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013-14 Joaquim Rocha
+%% Copyright 2014 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 %% limitations under the License.
 %%
 
--module(kb_action_handler).
+-module(kb_filter_handler).
 
 -include("kill_bill.hrl").
 
@@ -24,4 +24,5 @@
     | {json, Status :: integer(), Value :: any(), Request :: #kb_request{}}
 	| {dtl, Template :: module(), Args :: list(), Request :: #kb_request{}}
 	| {redirect, Url :: iolist(), Request :: #kb_request{}} 
-	| {raw, Status :: integer(), Headers :: list(), Body :: iodata(), Request :: #kb_request{}}.
+	| {raw, Status :: integer(), Headers :: list(), Body :: iodata(), Request :: #kb_request{}}
+    | {next, Attributes :: jsondoc:proplist(), Request :: #kb_request{}}.
