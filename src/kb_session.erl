@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-14 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -54,9 +54,10 @@ get_session_id(Req) ->
 
 -spec get_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
 	{no_session, list(), cowboy_req:req()} | {binary(), list(), cowboy_req:req()}.
+get_session(none, Req) -> {no_session, ?SESSION_DATA, Req};
 get_session(CacheName, Req) ->
-	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
-		{undefined, Req2} -> {no_session, ?SESSION_DATA, Req2};
+	case get_session_id(Req) of
+		{no_session, Req2} -> {no_session, ?SESSION_DATA, Req2};
 		{SessionID, Req2} -> 
 			case g_cache:get(CacheName, SessionID) of
 				{ok, SessionData} -> {SessionID, SessionData, Req2};
@@ -66,6 +67,7 @@ get_session(CacheName, Req) ->
 
 -spec set_session(CacheName :: atom(), SessionData :: list(), Req :: cowboy_req:req()) ->
 	{binary(), cowboy_req:req()}.
+set_session(none, _SessionData, Req) -> {none, Req};
 set_session(CacheName, SessionData, Req) ->
 	SessionID = create_session_id(),
 	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, none, Req),
@@ -73,20 +75,23 @@ set_session(CacheName, SessionData, Req) ->
 
 -spec set_session(CacheName :: atom(), SessionID :: binary(), SessionData :: list(), Req :: cowboy_req:req()) ->
 	{binary(), cowboy_req:req()}.
+set_session(none, _SessionID, _SessionData, Req) -> {none, Req};
 set_session(CacheName, SessionID, SessionData, Req) ->
 	g_cache:store(CacheName, SessionID, SessionData),
 	{SessionID, Req}.
 
 -spec invalidate_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
+invalidate_session(none, Req) -> {ok, Req};
 invalidate_session(CacheName, Req) ->
-	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
-		{undefined, Req2} -> {ok, Req2};
+	case get_session_id(Req) of
+		{no_session, Req2} -> {ok, Req2};
 		{SessionID, Req2} -> invalidate_session(CacheName, SessionID, Req2)
 	end.
 
 -spec invalidate_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
+invalidate_session(none, _SessionID, Req) -> {ok, Req};
 invalidate_session(CacheName, SessionID, Req) ->
 	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, 0, Req),
 	g_cache:remove(CacheName, SessionID),
@@ -94,14 +99,16 @@ invalidate_session(CacheName, SessionID, Req) ->
 
 -spec touch_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
+touch_session(none, Req) -> {ok, Req};
 touch_session(CacheName, Req) ->
-	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
-		{undefined, Req2} -> {ok, Req2};
+	case get_session_id(Req) of
+		{no_session, Req2} -> {ok, Req2};
 		{SessionID, Req2} -> touch_session(CacheName, SessionID, Req2)
 	end.
 
 -spec touch_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
+touch_session(none, _SessionID, Req) -> {ok, Req};
 touch_session(CacheName, SessionID, Req) ->
 	g_cache:touch(CacheName, SessionID),
 	{ok, Req}.

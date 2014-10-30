@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-14 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -350,15 +350,19 @@ stop_resource_server(none) -> ok;
 stop_resource_server(Pid) -> kb_resource:stop(Pid).
 
 create_session(WebAppName, WebAppConfig) ->
-	SessionCache = list_to_atom(atom_to_list(WebAppName) ++ "_session"),
-	SessionTimeout = proplists:get_value(session_timeout, WebAppConfig, 30),
-	Options = [{max_age, SessionTimeout * 60},
-			{purge_interval, 60},
-			{cluster_nodes, all},
-			{sync_mode, full}],
-	gibreel:create_cache(SessionCache, Options),
-	SessionCache.
+	case proplists:get_value(session_timeout, WebAppConfig, 30) of
+		none -> none;
+		SessionTimeout  ->
+			SessionCache = list_to_atom(atom_to_list(WebAppName) ++ "_session"),
+			Options = [{max_age, SessionTimeout * 60},
+					{purge_interval, 60},
+					{cluster_nodes, all},
+					{sync_mode, full}],
+			gibreel:create_cache(SessionCache, Options),
+			SessionCache
+	end.
 
+stop_session(none) -> ok;
 stop_session(SessionCache) ->
 	gibreel:delete_cache(SessionCache).
 
@@ -395,12 +399,20 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	TemplateConfig = proplists:get_value(template, WebApp#webapp.config, none),
 	ActionConfig = proplists:get_value(action, WebApp#webapp.config, []),
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
-	
+	ActionPath = action_path(ActionConfig, [], []),
 	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, []),
-	PathsWithAction = add_action(ActionConfig, Context, ResourceServer, SessionManager, PathsWithTemplate),
+	PathsWithAction = add_action(ActionPath, Context, ResourceServer, SessionManager, PathsWithTemplate),
 	PathsWithStatic = add_static(StaticConfig, Context, PathsWithAction),
 	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> sort_paths(A, B) end, PathsWithStatic),
 	get_web_app_config(T, lists:append(Sorted, Paths)).
+
+action_path([{Filter, SubConfig}|T], Path, Output) when is_atom(Filter) andalso is_list(SubConfig) ->
+        NewOutput = action_path(SubConfig, [Filter|Path], []),
+        action_path(T, Path, Output ++ NewOutput);
+action_path([{ActionContext, Action}|T], Path, Output) ->
+        CallbackList = lists:reverse([Action|Path]),
+        action_path(T, Path, [{ActionContext, CallbackList}|Output]);
+action_path([], _Path, Output) -> Output.
 
 sort_paths(A, B) ->
 	{UA, QA} = fix_path(A),
@@ -446,11 +458,11 @@ get_template_match(TemplatePrefix, Context) ->
 	Context ++ remove_slashs(TemplatePrefix) ++ "/[...]".
 
 add_action([], _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
-add_action([{ActionPrefix, Callback}|T], Context, ResourceServer, SessionManager, Paths) ->
+add_action([{ActionPrefix, CallbackList}|T], Context, ResourceServer, SessionManager, Paths) ->
 	NPaths = lists:append([
 				{get_action_match(ActionPrefix, Context), kb_cowboy_action, [
 						{resource_server, ResourceServer}, 
-						{callback, Callback},
+						{callback_list, CallbackList},
 						{context, Context},
 						{session_manager, SessionManager}
 						]}

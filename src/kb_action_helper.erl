@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-14 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@
 	get_json/1, 
 	get_session/1,
 	set_session/2,
+	get_attributes/1,
 	invalidate_session/1,
 	set_cookie/4, 
 	get_cookie/2,
@@ -106,6 +107,9 @@ get_session(Req) ->
 	when SessionData :: [{any(), any()}, ...].
 set_session(UserData, Req) ->
 	kb_session_util:set_user_data(UserData, Req).
+
+-spec get_attributes(Req :: #kb_request{}) -> jsondoc:proplist().
+get_attributes(Req) -> Req#kb_request.attributes.
 
 -spec set_cookie(Name :: binary(), Value :: term(), MaxAge :: integer(), Req :: #kb_request{}) -> #kb_request{}.
 set_cookie(Name, Value, MaxAge, Req) when is_binary(Value) ->

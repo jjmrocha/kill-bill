@@ -24,12 +24,12 @@
 
 init(_Transport, Req, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
-	Callback = proplists:get_value(callback, Opts),
+	CallbackList = proplists:get_value(callback_list, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Req, {ResourceServer, SessionManager, Callback, list_to_binary(Context)}}.
+	{ok, Req, {ResourceServer, SessionManager, CallbackList, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, SessionManager, Callback, Context}) ->
+handle(Req, {ResourceServer, SessionManager, CallbackList, Context}) ->
 	{Method, Req1} = cowboy_req:method(Req),
 	{Path, Req2} = cowboy_req:path_info(Req1),
 	Request = #kb_request{context=Context, 
@@ -37,9 +37,17 @@ handle(Req, {ResourceServer, SessionManager, Callback, Context}) ->
 			session_manager=SessionManager, 
 			method=Method, 
 			data=Req2},
-	Response = Callback:handle(Method, Path, Request),
+	Response = handle(CallbackList, Path, Request),
 	Req3 = kb_response:handle(Response),
-	{ok, Req3, {ResourceServer, SessionManager, Callback, Context}}.
+	{ok, Req3, {ResourceServer, SessionManager, CallbackList, Context}}.
 
 terminate(_Reason, _Req, _State) ->
 	ok.
+
+handle([Callback|T], Path, Request = #kb_request{method=Method}) ->
+	case Callback:handle(Method, Path, Request) of
+		{next, Attributes, Request1} ->
+			handle(T, Path, Request1#kb_request{attributes=Attributes});
+		Response -> Response
+	end;
+handle([], _Path, Request) -> {raw, 500, [], <<"No handler for request">>, Request}.
