@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-14 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -45,7 +45,8 @@ implements_behaviour(Module, Behaviour) when is_atom(Module) andalso is_atom(Beh
 	BiourList = proplists:get_value(behaviour, Attr, []),
 	BiorList = proplists:get_value(behavior, Attr, []),
 	FullList = BiourList ++ BiorList,
-	lists:member(Behaviour, FullList).
+	lists:member(Behaviour, FullList);
+implements_behaviour(_Module, _Behaviour) -> false.
 
 to_hex([]) -> [];
 to_hex(Bin) when is_binary(Bin) -> 
