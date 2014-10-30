@@ -39,10 +39,7 @@ start_link() ->
 	when Config :: ConfigFile :: string()
                  | {server_config, ServerName :: atom(), Config :: list()}.
 config_server({server_config, ServerName, Config}) when is_atom(ServerName) andalso is_list(Config) ->
-	case validate_server_config(Config) of
-		{ok, NConfig} -> gen_server:call(?MODULE, {config_server, ServerName, NConfig});
-		{error, Reason} -> {error, Reason}
-	end;
+	gen_server:call(?MODULE, {config_server, ServerName, Config});
 config_server(FileName) when is_list(FileName) ->
 	case load_configuration(FileName) of
 		not_found -> {error, not_found};
@@ -66,10 +63,7 @@ get_server_list() ->
 	when Config :: WebAppFile :: string()
                  | {webapp_config, WebAppName :: atom(), Config :: list()}.	  
 deploy(ServerName, {webapp_config, WebAppName, Config}) when is_atom(ServerName) andalso is_atom(WebAppName) andalso is_list(Config) ->
-	case validate_webapp_config(Config) of
-		{ok, NConfig} -> gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, NConfig}});
-		{error, Reason} -> {error, Reason}
-	end;
+	gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, Config}});
 deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) ->
 	case load_configuration(FileName) of
 		not_found -> {error, not_found};
@@ -283,37 +277,6 @@ load_configuration(FileName) ->
 	case filelib:is_file(FileName) of
 		true ->	file:script(FileName);
 		false -> not_found
-	end.
-
-validate_server_config(Config) ->
-	% TODO Tenho de validar a configuracao
-	{ok, Config}.
-
-validate_webapp_config(Config) ->
-	% TODO Tenho de validar toda a configuracao
-	case validate_action(Config) of
-		{ok, NConfig} -> validate_webclient(NConfig);
-		Error -> Error
-	end.
-
-validate_action(Config) ->
-	ActionConfig = proplists:get_value(action, Config, []),
-	ValidAction = fun({ActionPrefix, Callback}) ->
-			not (is_list(ActionPrefix) andalso kb_util:implements_behaviour(Callback, kb_action_handler))
-	end,
-	case lists:filter(ValidAction, ActionConfig) of
-		[] ->	{ok, Config};
-		InvalidAction -> {error, {invalid_action, InvalidAction}}
-	end.
-
-validate_webclient(Config) ->
-	WebClientConfig = proplists:get_value(webclient, Config, []),
-	ValidWebClient = fun({WebclientName, WebclientPrefix, Callback}) ->
-			not (is_atom(WebclientName) andalso is_list(WebclientPrefix) andalso kb_util:implements_behaviour(Callback, kb_webclient_handler))
-	end,
-	case lists:filter(ValidWebClient, WebClientConfig) of
-		[] ->	{ok, Config};
-		InvalidWebClient -> {error, {invalid_webclient, InvalidWebClient}}
 	end.
 
 get_host(ServerConfig) ->
