@@ -21,7 +21,7 @@
 -callback handle(Method :: binary(), Path :: list(), Request :: #kb_request{}) 
 	-> {html, Value :: iodata(), Request :: #kb_request{}} 
 	| {json, Value :: any(), Request :: #kb_request{}}
-    | {json, Status :: integer(), Value :: any(), Request :: #kb_request{}}
+    | {json, Status :: integer(), Headers :: list(), Value :: any(), Request :: #kb_request{}}
 	| {dtl, Template :: module(), Args :: list(), Request :: #kb_request{}}
 	| {redirect, Url :: iolist(), Request :: #kb_request{}} 
 	| {raw, Status :: integer(), Headers :: list(), Body :: iodata(), Request :: #kb_request{}}
