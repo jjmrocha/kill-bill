@@ -26,10 +26,10 @@
 handle({html, Value, Req}) -> 
 	handle({raw, 200, [{<<"content-type">>, <<"text/html">>}], Value, Req});
 
-handle({json, Value, Req}) -> handle({json, 200, Value, Req});
-handle({json, Status, Value, Req}) -> 
+handle({json, Value, Req}) -> handle({json, 200, [], Value, Req});
+handle({json, Status, Headers, Value, Req}) -> 
 	Output = kb_json:encode(Value),
-	handle({raw, Status, [{<<"content-type">>, <<"application/json">>}], Output, Req});
+	handle({raw, Status, [{<<"content-type">>, <<"application/json">>}|Headers], Output, Req});
 
 handle({dtl, Template, Args, Req}) ->
 	{Dict, Req1} = kb_resource_util:get_dict(Req),
