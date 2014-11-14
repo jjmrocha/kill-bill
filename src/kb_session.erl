@@ -60,7 +60,7 @@ get_session(CacheName, Req) ->
 		{no_session, Req2} -> {no_session, ?SESSION_DATA, Req2};
 		{SessionID, Req2} -> 
 			case g_cache:get(CacheName, SessionID) of
-				{ok, SessionData} -> {SessionID, SessionData, Req2};
+				{ok, SessionData, _Version} -> {SessionID, SessionData, Req2};
 				_ -> {SessionID, ?SESSION_DATA, Req2}
 			end
 	end.

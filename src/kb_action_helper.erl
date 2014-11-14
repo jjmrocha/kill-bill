@@ -31,6 +31,7 @@
 	get_content_type/1,
 	get_args/1, 
 	get_json/1, 
+	get_body/1,
 	get_session/1,
 	set_session/2,
 	get_attributes/1,
@@ -97,6 +98,11 @@ get_json(Req) ->
 				_ -> {jsondoc:new(), Req1}
 			end
 	end.
+
+-spec get_body(Req :: #kb_request{}) -> {binary(), #kb_request{}}.
+get_body(Req) ->
+	{ok, Body, Data1} = cowboy_req:body(Req#kb_request.data),
+	{Body, Req#kb_request{data=Data1}}.
 
 -spec get_session(Req :: #kb_request{}) -> {SessionData, #kb_request{}}
 	when SessionData :: [{any(), any()}, ...].
