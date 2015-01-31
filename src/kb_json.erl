@@ -22,13 +22,15 @@
 -export([decode/1, encode/1]).
 
 encode(Value) ->
-	case jsondoc:is_jsondoc(Value) of
-		true -> jsondoc:encode(Value);
-		false -> jsondoc:encode(Value)
-	end.
+	jsx:encode(Value).
 
-decode(Value) ->
-	jsondoc:decode(Value).
+decode(Value) when is_binary(Value) ->
+	case jsx:decode(Value) of
+		[{}] -> [];
+		Doc -> Doc
+	end;		
+decode(Value) when is_list(Value) ->
+	decode(list_to_binary(Value)).
 
 %% ====================================================================
 %% Internal functions
