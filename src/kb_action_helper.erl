@@ -95,7 +95,7 @@ get_json(Req) ->
 					{Args, Req2} = get_args(Req1),
 					JSon = jsondoc:from_proplist(Args),
 					{JSon, Req2};
-				_ -> {kb_json:new(), Req1}
+				_ -> {[], Req1}
 			end
 	end.
 
