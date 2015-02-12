@@ -16,17 +16,24 @@
 
 -module(kb_json).
 
+-define(JSX_CLEAN_OBJECT, [{}]).
+
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([decode/1, encode/1]).
+-export([decode/1, encode/1, new/0, from_proplist/1]).
+
+new() -> ?JSX_CLEAN_OBJECT.
+
+from_proplist([]) -> ?JSX_CLEAN_OBJECT;
+from_proplist(Props) -> Props.
 
 encode(Value) ->
 	jsx:encode(Value).
 
 decode(Value) when is_binary(Value) ->
 	case jsx:decode(Value) of
-		[{}] -> [];
+		?JSX_CLEAN_OBJECT -> [];
 		Doc -> Doc
 	end;		
 decode(Value) when is_list(Value) ->

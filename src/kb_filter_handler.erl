@@ -25,4 +25,4 @@
 	| {dtl, Template :: module(), Args :: list(), Request :: #kb_request{}}
 	| {redirect, Url :: iolist(), Request :: #kb_request{}} 
 	| {raw, Status :: integer(), Headers :: list(), Body :: iodata(), Request :: #kb_request{}}
-    | {next, Attributes :: jsondoc:proplist(), Request :: #kb_request{}}.
+    | {next, Attributes :: list(), Request :: #kb_request{}}.

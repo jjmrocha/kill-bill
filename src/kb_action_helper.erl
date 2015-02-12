@@ -77,12 +77,12 @@ get_args(Req) ->
 		_ -> {[], Req}
 	end.
 
--spec get_json(Req :: #kb_request{}) -> {jsondoc:jsondoc(), #kb_request{}}.
+-spec get_json(Req :: #kb_request{}) -> {jsx:json_term(), #kb_request{}}.
 get_json(Req) ->
 	case Req#kb_request.method of
 		<<"GET">> ->
 			{Args, Req1} = get_args(Req),
-			JSon = jsondoc:from_proplist(Args),
+			JSon = kb_json:from_proplist(Args),
 			{JSon, Req1};
 		_ ->
 			{ContentType, Req1} = get_content_type(Req),
@@ -95,7 +95,7 @@ get_json(Req) ->
 					{Args, Req2} = get_args(Req1),
 					JSon = jsondoc:from_proplist(Args),
 					{JSon, Req2};
-				_ -> {jsondoc:new(), Req1}
+				_ -> {kb_json:new(), Req1}
 			end
 	end.
 
@@ -114,7 +114,7 @@ get_session(Req) ->
 set_session(UserData, Req) ->
 	kb_session_util:set_user_data(UserData, Req).
 
--spec get_attributes(Req :: #kb_request{}) -> jsondoc:proplist().
+-spec get_attributes(Req :: #kb_request{}) -> list().
 get_attributes(Req) -> Req#kb_request.attributes.
 
 -spec set_cookie(Name :: binary(), Value :: term(), MaxAge :: integer(), Req :: #kb_request{}) -> #kb_request{}.
