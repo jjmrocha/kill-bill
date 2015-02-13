@@ -67,15 +67,15 @@ get_content_type(Req) ->
 -spec get_args(Req :: #kb_request{}) -> {Args, #kb_request{}}
 	when Args :: [{binary(), binary()}, ...].
 get_args(Req) ->
-	case Req#kb_request.method of
-		<<"GET">> ->
-			{QSVals, Data1} = cowboy_req:qs_vals(Req#kb_request.data),
-			{QSVals, Req#kb_request{data=Data1}};
+	{QSVals, Data1} = cowboy_req:qs_vals(Req#kb_request.data),
+	{BodyQS1, Data3} = case Req#kb_request.method of
 		<<"POST">> ->
-			{ok, BodyQS, Data1} = cowboy_req:body_qs(Req#kb_request.data),
-			{BodyQS, Req#kb_request{data=Data1}};
+			{ok, BodyQS, Data2} = cowboy_req:body_qs(Data1),
+			{BodyQS, Data2};
 		_ -> {[], Req}
-	end.
+	end,
+	QS = mergeQS(QSVals, BodyQS1, []),
+	{QS, Req#kb_request{data=Data3}}.
 
 -spec get_json(Req :: #kb_request{}) -> {jsx:json_term(), #kb_request{}}.
 get_json(Req) ->
@@ -92,9 +92,9 @@ get_json(Req) ->
 					JSon = kb_json:decode(Body),
 					{JSon, Req1#kb_request{data=Data1}};
 				?FORM_CONTENT_TYPE ->
-					{Args, Req2} = get_args(Req1),
-					JSon = jsondoc:from_proplist(Args),
-					{JSon, Req2};
+					{ok, BodyQS, Data1} = cowboy_req:body_qs(Req1#kb_request.data),
+					JSon = jsondoc:from_proplist(BodyQS),
+					{JSon, Req1#kb_request{data=Data1}};
 				_ -> {[], Req1}
 			end
 	end.
@@ -142,7 +142,7 @@ get_cookie(Name, Req) ->
 
 -spec get_locales(Req :: #kb_request{}) -> {any_locale | Locales, #kb_request{}}
 	when Locales :: [Locale, ...],
-		  Locale :: {Language :: binary(), Country :: binary()}.
+	Locale :: {Language :: binary(), Country :: binary()}.
 get_locales(Req) ->
 	kb_locale:get_locales(Req).				
 
@@ -156,17 +156,17 @@ remove_locale(Req) -> kb_locale:remove_locale(Req).
 
 -spec get_message(MsgId :: iolist(), Req :: #kb_request{}) -> {Response, #kb_request{}}
 	when Response :: no_resource
-					| message_not_found
-					| iolist().
+	| message_not_found
+	| iolist().
 get_message(MsgId, Req) ->
 	kb_resource_util:get_message(MsgId, Req).
 
 -spec get_message(MsgId :: iolist(), Args, Req :: #kb_request{}) -> {Response, #kb_request{}}
 	when Args :: [Arg, ...],
-		 Arg :: {Search :: binary(), Replace :: binary()},
-		 Response :: no_resource
-					| message_not_found
-					| iolist().
+	Arg :: {Search :: binary(), Replace :: binary()},
+	Response :: no_resource
+	| message_not_found
+	| iolist().
 get_message(MsgId, Args, Req) ->
 	kb_resource_util:get_message(MsgId, Args, Req).
 
@@ -189,12 +189,22 @@ mime_type(ContentType) ->
 best(any_locale, _List, Default) -> Default;
 best(Locales, List, Default) -> 
 	Valid = lists:filter(fun(Locale = {Languale, _}) ->
-		case lists:member(Locale, List) of
-			true -> true;
-			false -> lists:member({Languale, ?NO_COUNTRY_IN_LOCALE}, List)
-		end
-	end, Locales),
+					case lists:member(Locale, List) of
+						true -> true;
+						false -> lists:member({Languale, ?NO_COUNTRY_IN_LOCALE}, List)
+					end
+			end, Locales),
 	case Valid of
 		[] -> Default;
 		[Locale|_] -> Locale
 	end.
+
+mergeQS([H={Key, _}|T], BodyQS, Output) ->
+	{KV, BQS1} = case lists:keyfind(Key, 1, BodyQS) of
+		{_, Value} -> 
+			BQS = lists:keydelete(Key, 1, BodyQS),
+			{{Key, Value}, BQS};
+		false -> {H, BodyQS}
+	end,
+	mergeQS(T, BQS1, [KV|Output]);
+mergeQS([], BodyQS, Output) -> BodyQS ++ Output.

@@ -22,26 +22,26 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, Opts) ->
+init(_Transport, Data, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
 	CallbackList = proplists:get_value(callback_list, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Req, {ResourceServer, SessionManager, CallbackList, list_to_binary(Context)}}.
+	{ok, Data, {ResourceServer, SessionManager, CallbackList, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, SessionManager, CallbackList, Context}) ->
-	{Method, Req1} = cowboy_req:method(Req),
-	{Path, Req2} = cowboy_req:path_info(Req1),
+handle(Data, {ResourceServer, SessionManager, CallbackList, Context}) ->
+	{Method, Data1} = cowboy_req:method(Data),
+	{Path, Data2} = cowboy_req:path_info(Data1),
 	Request = #kb_request{context=Context, 
 			resource_server=ResourceServer, 
 			session_manager=SessionManager, 
 			method=Method, 
-			data=Req2},
+			data=Data2},
 	Response = handle(CallbackList, Path, Request),
-	Req3 = kb_response:handle(Response),
-	{ok, Req3, {ResourceServer, SessionManager, CallbackList, Context}}.
+	Data3 = kb_response:handle(Response),
+	{ok, Data3, {ResourceServer, SessionManager, CallbackList, Context}}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Data, _State) ->
 	ok.
 
 handle([Callback|T], Path, Request = #kb_request{method=Method}) ->

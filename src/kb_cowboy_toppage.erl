@@ -22,17 +22,17 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, Opts) ->
+init(_Transport, Data, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
 	TopPage = proplists:get_value(top_page, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Req, {ResourceServer, SessionManager, TopPage, list_to_binary(Context)}}.
+	{ok, Data, {ResourceServer, SessionManager, TopPage, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, SessionManager, TopPage, Context}) ->
-	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Req},
-	Req2 = kb_template_util:execute(TopPage, Request),
-	{ok, Req2, {ResourceServer, SessionManager, TopPage, Context}}.
+handle(Data, {ResourceServer, SessionManager, TopPage, Context}) ->
+	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Data},
+	Data2 = kb_template_util:execute(TopPage, Request),
+	{ok, Data2, {ResourceServer, SessionManager, TopPage, Context}}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Data, _State) ->
 	ok.

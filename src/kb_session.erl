@@ -44,74 +44,74 @@ create_session_id() ->
 	Prefix = io_lib:format("~14.16.0b", [(Nowsecs - Then) * 1000000 + Micro]),
 	list_to_binary(Prefix ++ kb_util:to_hex(crypto:rand_bytes(9))).
 
--spec get_session_id(Req :: cowboy_req:req()) -> 
+-spec get_session_id(Data :: cowboy_req:req()) -> 
 	{no_session, cowboy_req:req()} | {binary(), cowboy_req:req()}.
-get_session_id(Req) ->
-	case kb_http:get_cookie(?SESSION_COOKIE, Req) of
-		{undefined, Req2} -> {no_session, Req2};
-		{SessionID, Req2} -> {SessionID, Req2}
+get_session_id(Data) ->
+	case kb_http:get_cookie(?SESSION_COOKIE, Data) of
+		{undefined, Data1} -> {no_session, Data1};
+		{SessionID, Data1} -> {SessionID, Data1}
 	end.
 
--spec get_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+-spec get_session(CacheName :: atom(), Data :: cowboy_req:req()) ->
 	{no_session, list(), cowboy_req:req()} | {binary(), list(), cowboy_req:req()}.
-get_session(none, Req) -> {no_session, ?SESSION_DATA, Req};
-get_session(CacheName, Req) ->
-	case get_session_id(Req) of
-		{no_session, Req2} -> {no_session, ?SESSION_DATA, Req2};
-		{SessionID, Req2} -> 
+get_session(none, Data) -> {no_session, ?SESSION_DATA, Data};
+get_session(CacheName, Data) ->
+	case get_session_id(Data) of
+		{no_session, Data1} -> {no_session, ?SESSION_DATA, Data1};
+		{SessionID, Data1} -> 
 			case g_cache:get(CacheName, SessionID) of
-				{ok, SessionData, _Version} -> {SessionID, SessionData, Req2};
-				_ -> {SessionID, ?SESSION_DATA, Req2}
+				{ok, SessionData, _Version} -> {SessionID, SessionData, Data1};
+				_ -> {SessionID, ?SESSION_DATA, Data1}
 			end
 	end.
 
--spec set_session(CacheName :: atom(), SessionData :: list(), Req :: cowboy_req:req()) ->
+-spec set_session(CacheName :: atom(), SessionData :: list(), Data :: cowboy_req:req()) ->
 	{binary(), cowboy_req:req()}.
-set_session(none, _SessionData, Req) -> {none, Req};
-set_session(CacheName, SessionData, Req) ->
+set_session(none, _SessionData, Data) -> {none, Data};
+set_session(CacheName, SessionData, Data) ->
 	SessionID = create_session_id(),
-	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, none, Req),
-	set_session(CacheName, SessionID, SessionData, Req2).
+	Data1 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, none, Data),
+	set_session(CacheName, SessionID, SessionData, Data1).
 
--spec set_session(CacheName :: atom(), SessionID :: binary(), SessionData :: list(), Req :: cowboy_req:req()) ->
+-spec set_session(CacheName :: atom(), SessionID :: binary(), SessionData :: list(), Data :: cowboy_req:req()) ->
 	{binary(), cowboy_req:req()}.
-set_session(none, _SessionID, _SessionData, Req) -> {none, Req};
-set_session(CacheName, SessionID, SessionData, Req) ->
+set_session(none, _SessionID, _SessionData, Data) -> {none, Data};
+set_session(CacheName, SessionID, SessionData, Data) ->
 	g_cache:store(CacheName, SessionID, SessionData),
-	{SessionID, Req}.
+	{SessionID, Data}.
 
--spec invalidate_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+-spec invalidate_session(CacheName :: atom(), Data :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
-invalidate_session(none, Req) -> {ok, Req};
-invalidate_session(CacheName, Req) ->
-	case get_session_id(Req) of
-		{no_session, Req2} -> {ok, Req2};
-		{SessionID, Req2} -> invalidate_session(CacheName, SessionID, Req2)
+invalidate_session(none, Data) -> {ok, Data};
+invalidate_session(CacheName, Data) ->
+	case get_session_id(Data) of
+		{no_session, Data1} -> {ok, Data1};
+		{SessionID, Data1} -> invalidate_session(CacheName, SessionID, Data1)
 	end.
 
--spec invalidate_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
+-spec invalidate_session(CacheName :: atom(), SessionID :: binary(), Data :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
-invalidate_session(none, _SessionID, Req) -> {ok, Req};
-invalidate_session(CacheName, SessionID, Req) ->
-	Req2 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, 0, Req),
+invalidate_session(none, _SessionID, Data) -> {ok, Data};
+invalidate_session(CacheName, SessionID, Data) ->
+	Data1 = kb_http:set_cookie(?SESSION_PATH, ?SESSION_COOKIE, SessionID, 0, Data),
 	g_cache:remove(CacheName, SessionID),
-	{ok, Req2}.
+	{ok, Data1}.
 
--spec touch_session(CacheName :: atom(), Req :: cowboy_req:req()) ->
+-spec touch_session(CacheName :: atom(), Data :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
-touch_session(none, Req) -> {ok, Req};
-touch_session(CacheName, Req) ->
-	case get_session_id(Req) of
-		{no_session, Req2} -> {ok, Req2};
-		{SessionID, Req2} -> touch_session(CacheName, SessionID, Req2)
+touch_session(none, Data) -> {ok, Data};
+touch_session(CacheName, Data) ->
+	case get_session_id(Data) of
+		{no_session, Data1} -> {ok, Data1};
+		{SessionID, Data1} -> touch_session(CacheName, SessionID, Data1)
 	end.
 
--spec touch_session(CacheName :: atom(), SessionID :: binary(), Req :: cowboy_req:req()) ->
+-spec touch_session(CacheName :: atom(), SessionID :: binary(), Data :: cowboy_req:req()) ->
 	{ok, cowboy_req:req()}.
-touch_session(none, _SessionID, Req) -> {ok, Req};
-touch_session(CacheName, SessionID, Req) ->
+touch_session(none, _SessionID, Data) -> {ok, Data};
+touch_session(CacheName, SessionID, Data) ->
 	g_cache:touch(CacheName, SessionID),
-	{ok, Req}.
+	{ok, Data}.
 
 %% ====================================================================
 %% Internal functions

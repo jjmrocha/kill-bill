@@ -59,17 +59,17 @@ get_user_locale(Req) ->
 	end,
 	{ChosenLanguage, Req1}.
 
-get_accept_languages(Req) ->
-	{AcceptLanguages, Req1} = kb_http:get_header(<<"accept-language">>, Req),
+get_accept_languages(Data) ->
+	{AcceptLanguages, Data1} = kb_http:get_header(<<"accept-language">>, Data),
 	case AcceptLanguages of
-		undefined -> {[], Req1};
-		error -> {[], Req1};
+		undefined -> {[], Data1};
+		error -> {[], Data1};
 		_ ->
 			Fun = fun({_TagA, QualityA}, {_TagB, QualityB}) -> 
 					QualityA > QualityB 
 			end,
 			SortedAcceptLanguages = lists:sort(Fun, AcceptLanguages),
-			{get_locales(SortedAcceptLanguages, []), Req1}
+			{get_locales(SortedAcceptLanguages, []), Data1}
 	end.
 
 get_locales([], []) -> ?ANY_LOCALE;

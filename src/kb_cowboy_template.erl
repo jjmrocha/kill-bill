@@ -22,20 +22,20 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, Opts) ->
+init(_Transport, Data, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Req, {ResourceServer, SessionManager, list_to_binary(Context)}}.
+	{ok, Data, {ResourceServer, SessionManager, list_to_binary(Context)}}.
 
-handle(Req, {ResourceServer, SessionManager, Context}) ->
-	{Path, Req1} = cowboy_req:path_info(Req),
+handle(Data, {ResourceServer, SessionManager, Context}) ->
+	{Path, Data1} = cowboy_req:path_info(Data),
 	NewPath = join(Path, <<>>),
-	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Req1},
-	Req2 = kb_template_util:execute(NewPath, Request),
-	{ok, Req2, {ResourceServer, SessionManager, Context}}.
+	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Data1},
+	Data2 = kb_template_util:execute(NewPath, Request),
+	{ok, Data2, {ResourceServer, SessionManager, Context}}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Data, _State) ->
 	ok.
 
 join([], Value) -> Value;

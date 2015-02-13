@@ -20,15 +20,15 @@
 
 -export([init/3, handle/2, terminate/3]).
 
-init(_Transport, Req, Opts) ->
+init(_Transport, Data, Opts) ->
 	ServerName = proplists:get_value(server, Opts),
 	Host = proplists:get_value(host, Opts),
-	{ok, Req, {ServerName, Host}}.
+	{ok, Data, {ServerName, Host}}.
 
-handle(Req, {ServerName, Host}) ->
+handle(Data, {ServerName, Host}) ->
 	Output = io_lib:format("Kill Bill server ~p running for host [~p]", [ServerName, Host]),
-	{ok, Req2} = cowboy_req:reply(200, [], Output, Req),
-	{ok, Req2, {ServerName, Host}}.
+	{ok, Data2} = cowboy_req:reply(200, [], Output, Data),
+	{ok, Data2, {ServerName, Host}}.
 
-terminate(_Reason, _Req, _State) ->
+terminate(_Reason, _Data, _State) ->
 	ok.
