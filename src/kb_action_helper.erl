@@ -72,7 +72,7 @@ get_args(Req) ->
 		<<"POST">> ->
 			{ok, BodyQS, Data2} = cowboy_req:body_qs(Data1),
 			{BodyQS, Data2};
-		_ -> {[], Req}
+		_ -> {[], Data1}
 	end,
 	QS = mergeQS(QSVals, BodyQS1, []),
 	{QS, Req#kb_request{data=Data3}}.

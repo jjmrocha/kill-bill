@@ -49,7 +49,7 @@ handle({redirect, Url, Req}) when is_list(Url) ->
 handle({redirect, Url, Req}) when is_binary(Url) -> 
 	handle({raw, 302, [{<<"Location">>, Url}], [], Req});
 
-handle({raw, Status, Headers, Body, Req}) -> 
+handle({raw, Status, Headers, Body, Req}) ->
 	{ok, Data1} = session_touch(Req),
 	{ok, Data2} = cowboy_req:reply(Status, Headers, Body, Data1),
 	Data2.
