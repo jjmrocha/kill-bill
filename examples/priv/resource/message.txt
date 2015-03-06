@@ -1,0 +1,26 @@
+[
+{<<"layout_title">>, <<"Kill Bill Examples">>},
+
+{<<"world_greetings">>, <<"Hello world!">>},
+
+{<<"index_greetings">>, <<"Examples">>},
+{<<"index_full">>, <<"Action Handler">>},
+{<<"index_redirect">>, <<"Go to Google">>},
+{<<"index_json">>, <<"JSON output">>},
+{<<"index_locale">>, <<"Change language to &quot;pt&quot;">>},
+{<<"index_invalidate">>, <<"Session invalidate">>},
+{<<"index_new_locale">>, <<"pt">>},
+
+{<<"args_list_title">>, <<"GET parameters">>},
+{<<"args_list_empty_list">>, <<"No parameters">>},
+
+{<<"form_title">>, <<"Form example">>},
+{<<"form_field_id">>, <<"ID">>},
+{<<"form_field_name">>, <<"Name">>},
+{<<"form_submit">>, <<"Send">>},
+{<<"form_empty_list">>, <<"No data">>},
+
+{<<"back">>, <<"Back to {to}">>},
+{<<"to_index">>, <<"Index">>}
+
+].
