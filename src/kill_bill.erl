@@ -37,7 +37,7 @@ start_link() ->
 
 -spec config_server(ServerConfig :: Config) -> {ok, ServerName :: atom()} | {error, Reason :: any()} 
 	when Config :: ConfigFile :: string()
-                 | {server_config, ServerName :: atom(), Config :: list()}.
+	| {server_config, ServerName :: atom(), Config :: list()}.
 config_server({server_config, ServerName, Config}) when is_atom(ServerName) andalso is_list(Config) ->
 	gen_server:call(?MODULE, {config_server, ServerName, Config});
 config_server(FileName) when is_list(FileName) ->
@@ -61,7 +61,7 @@ get_server_list() ->
 
 -spec deploy(ServerName :: atom(), WebAppConfig :: Config) -> ok | {error, Reason :: any()} 
 	when Config :: WebAppFile :: string()
-                 | {webapp_config, WebAppName :: atom(), Config :: list()}.	  
+	| {webapp_config, WebAppName :: atom(), Config :: list()}.	  
 deploy(ServerName, {webapp_config, WebAppName, Config}) when is_atom(ServerName) andalso is_atom(WebAppName) andalso is_list(Config) ->
 	gen_server:call(?MODULE, {deploy, ServerName, {WebAppName, Config}});
 deploy(ServerName, FileName) when is_atom(ServerName) andalso is_list(FileName) ->
@@ -370,19 +370,19 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	get_web_app_config(T, lists:append(Sorted, Paths)).
 
 action_path([{Filter, SubConfig}|T], Path, Output) when is_atom(Filter) andalso is_list(SubConfig) ->
-        NewOutput = action_path(SubConfig, [Filter|Path], []),
-        action_path(T, Path, Output ++ NewOutput);
+	NewOutput = action_path(SubConfig, [Filter|Path], []),
+	action_path(T, Path, Output ++ NewOutput);
 action_path([{ActionContext, Action}|T], Path, Output) ->
-        CallbackList = lists:reverse([Action|Path]),
-        action_path(T, Path, [{ActionContext, CallbackList}|Output]);
+	CallbackList = lists:reverse([Action|Path]),
+	action_path(T, Path, [{ActionContext, CallbackList}|Output]);
 action_path([], _Path, Output) -> Output.
 
 sort_paths(A, B) ->
 	{UA, QA} = fix_path(A),
 	{UB, QB} = fix_path(B),
 	if UA < UB -> true;
-	   UA == UB -> QA > QB;
-	   true -> false
+		UA == UB -> QA > QB;
+		true -> false
 	end.
 
 fix_path(Path) ->
@@ -438,12 +438,15 @@ get_action_match(ActionPrefix, Context) ->
 add_static(none, _Context, Paths) -> Paths;
 add_static(StaticConfig, Context, Paths) ->
 	Path = proplists:get_value(path, StaticConfig, "/"), 
-	Dir = proplists:get_value(dir, StaticConfig, "./static"),
+	Options = [{mimetypes, cow_mimetypes, all}],
+	Config = case lists:keyfind(priv_dir, 1, StaticConfig) of
+		{_, App, Dir} -> {priv_dir, App, Dir, Options};
+		false -> 
+			Dir = proplists:get_value(dir, StaticConfig, "./static"),
+			{dir, Dir, Options}
+	end,	
 	lists:append([
-			{get_static_match(Path, Context), cowboy_static, 
-				{dir, Dir,[
-						{mimetypes, cow_mimetypes, all}
-						]}}
+			{get_static_match(Path, Context), cowboy_static, Config}
 			], Paths).
 
 get_static_match(Path, Context) ->

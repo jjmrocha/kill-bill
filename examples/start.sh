@@ -1,2 +1,2 @@
 #!/bin/sh
-erl -pa ebin deps/*/ebin -s examples
+erl -pa ../examples/ebin deps/*/ebin -s examples

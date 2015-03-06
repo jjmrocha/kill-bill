@@ -74,8 +74,17 @@ code_change(_OldVsn, State, _Extra) ->
 load_resources(Config, Store) -> 
 	BaseName = proplists:get_value(base_name, Config, "message"),
 	FileExtension = proplists:get_value(file_extension, Config, ".txt"),
-	FileDir = proplists:get_value(file_dir, Config, "./resource"),
-	
+	FileDirDefault = "./resource",
+	FileDir = case lists:keyfind(priv_dir, 1, Config) of
+		{_, App, Path} ->
+			case code:priv_dir(App) of
+				{error, bad_name} ->
+					error_logger:error_msg("~p: Can't resolve the priv_dir of application ~p\n", [?MODULE, App]),
+					FileDirDefault;
+				PrivDir -> PrivDir ++ "/" ++ Path
+			end;
+		false -> proplists:get_value(dir, Config, FileDirDefault)
+	end,
 	Extension = "." ++ kb_util:remove_if_starts_with(FileExtension, "."),
 	Wildcard = BaseName ++ "*" ++ Extension,
 	Files = filelib:wildcard(Wildcard, FileDir),
