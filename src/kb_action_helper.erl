@@ -19,6 +19,7 @@
 -include("kill_bill.hrl").
 
 -define(CONTENT_TYPE_HEADER, <<"content-type">>).
+-define(ACCEPT_HEADER, <<"accept">>).
 -define(FORM_CONTENT_TYPE, <<"application/x-www-form-urlencoded">>).
 -define(JSON_CONTENT_TYPE, <<"application/json">>).
 
@@ -29,6 +30,7 @@
 	get_context/1,
 	get_headers/1,
 	get_content_type/1,
+	get_accept_header/1,
 	get_args/1, 
 	get_json/1, 
 	get_body/1,
@@ -62,6 +64,15 @@ get_content_type(Req) ->
 	case lists:keyfind(?CONTENT_TYPE_HEADER, 1, Headers) of
 		false -> {<<>>, Req1};
 		{_, Content} -> {Content, Req1}
+	end.
+
+-spec get_accept_header(Req :: #kb_request{}) -> {[binary(), ...], #kb_request{}}.
+get_accept_header(Req) ->
+	case cowboy_req:parse_header(?ACCEPT_HEADER, Req#kb_request.data) of
+		{ok, Accept, Data1} ->
+			AcceptList = prioritize_accept(Accept),
+			{AcceptList, Req#kb_request{data=Data1}};
+		{undefined, _, Data1} -> {[], Req#kb_request{data=Data1}}
 	end.
 
 -spec get_args(Req :: #kb_request{}) -> {Args, #kb_request{}}
@@ -208,3 +219,27 @@ mergeQS([H={Key, _}|T], BodyQS, Output) ->
 	end,
 	mergeQS(T, BQS1, [KV|Output]);
 mergeQS([], BodyQS, Output) -> BodyQS ++ Output.
+
+%%
+% Copied from https://github.com/ninenines/cowboy/blob/1.0.x/src/cowboy_rest.erl
+prioritize_accept(Accept) ->
+	Ordered = lists:sort(
+		fun ({MediaTypeA, Quality, _AcceptParamsA}, {MediaTypeB, Quality, _AcceptParamsB}) -> prioritize_mediatype(MediaTypeA, MediaTypeB);
+			({_MediaTypeA, QualityA, _AcceptParamsA}, {_MediaTypeB, QualityB, _AcceptParamsB}) -> QualityA > QualityB
+		end, Accept),
+	lists:map(fun({{Type, SubType, _Params}, _Quality, _AcceptParams}) -> 
+			<<Type/binary, $/, SubType/binary>>
+		end, Ordered).
+
+prioritize_mediatype({TypeA, SubTypeA, ParamsA}, {TypeB, SubTypeB, ParamsB}) ->
+	case TypeB of
+		TypeA ->
+			case SubTypeB of
+				SubTypeA -> length(ParamsA) > length(ParamsB);
+				<<"*">> -> true;
+				_Any -> false
+			end;
+		<<"*">> -> true;
+		_Any -> false
+	end.
+%%
