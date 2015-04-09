@@ -68,11 +68,12 @@ get_content_type(Req) ->
 
 -spec get_accept_header(Req :: #kb_request{}) -> {[binary(), ...], #kb_request{}}.
 get_accept_header(Req) ->
-	case cowboy_req:parse_header(?ACCEPT_HEADER, Req#kb_request.data) of
+	case cowboy_req:parse_header(?ACCEPT_HEADER, Req#kb_request.data, <<"*">>) of
+		{ok, <<"*">>, Data1} -> {[<<"*">>], Req#kb_request{data=Data1}};
 		{ok, Accept, Data1} ->
 			AcceptList = prioritize_accept(Accept),
 			{AcceptList, Req#kb_request{data=Data1}};
-		{undefined, _, Data1} -> {[], Req#kb_request{data=Data1}}
+		{undefined, _, Data1} -> {[<<"*">>], Req#kb_request{data=Data1}}
 	end.
 
 -spec get_args(Req :: #kb_request{}) -> {Args, #kb_request{}}

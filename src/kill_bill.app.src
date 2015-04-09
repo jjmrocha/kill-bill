@@ -27,13 +27,10 @@
 	{applications, [
 		kernel, 
 		stdlib,
-		crypto,
-		ranch,
-		cowlib,
 		cowboy,
-		columbo,
-		cclock,
-		gibreel
+		gibreel,
+		jsx,
+		erlydtl
 	]},
 	{mod, {kill_bill_app, []}}
 ]}.
