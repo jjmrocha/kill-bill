@@ -26,14 +26,19 @@ init(_Transport, Data, Opts) ->
 	ResourceServer = proplists:get_value(resource_server, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Data, {ResourceServer, SessionManager, list_to_binary(Context)}}.
+	Static = proplists:get_value(static, Opts),
+	BaseRequest = #kb_request{context=list_to_binary(Context), 
+							  resource_server=ResourceServer, 
+							  session_manager=SessionManager, 
+							  static=list_to_binary(Static)},
+	{ok, Data, BaseRequest}.
 
-handle(Data, {ResourceServer, SessionManager, Context}) ->
+handle(Data, BaseRequest) ->
 	{Path, Data1} = cowboy_req:path_info(Data),
 	NewPath = join(Path, <<>>),
-	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Data1},
+	Request = BaseRequest#kb_request{data=Data1},
 	Data2 = kb_template_util:execute(NewPath, Request),
-	{ok, Data2, {ResourceServer, SessionManager, Context}}.
+	{ok, Data2, BaseRequest}.
 
 terminate(_Reason, _Data, _State) ->
 	ok.

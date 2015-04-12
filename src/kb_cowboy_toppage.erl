@@ -27,12 +27,17 @@ init(_Transport, Data, Opts) ->
 	TopPage = proplists:get_value(top_page, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Data, {ResourceServer, SessionManager, TopPage, list_to_binary(Context)}}.
+	Static = proplists:get_value(static, Opts),
+	BaseRequest = #kb_request{context=list_to_binary(Context), 
+							  resource_server=ResourceServer, 
+							  session_manager=SessionManager, 
+							  static=list_to_binary(Static)},
+	{ok, Data, {BaseRequest, TopPage}}.
 
-handle(Data, {ResourceServer, SessionManager, TopPage, Context}) ->
-	Request = #kb_request{context=Context, resource_server=ResourceServer, session_manager=SessionManager, data=Data},
+handle(Data, {BaseRequest, TopPage}) ->
+	Request = BaseRequest#kb_request{data=Data},
 	Data2 = kb_template_util:execute(TopPage, Request),
-	{ok, Data2, {ResourceServer, SessionManager, TopPage, Context}}.
+	{ok, Data2, {BaseRequest, TopPage}}.
 
 terminate(_Reason, _Data, _State) ->
 	ok.

@@ -23,14 +23,16 @@
 %% ====================================================================
 -export([execute/4, execute/3]).
 
-execute(Dtl, Args, #kb_request{context=Context}) -> 
-	Options = [{context, Context}],
+execute(Dtl, Args, #kb_request{context=Context, static=Static}) -> 
+	Options = [{context, Context}, {static, Static}],
 	execute_dtl(Dtl, Args, Options). 
 
 execute(Dtl, none, Args, Req) -> execute(Dtl, Args, Req);
-execute(Dtl, Dict, Args, #kb_request{context=Context}) ->
-	Options = [{resource, Dict},
-			{context, Context}],
+execute(Dtl, Dict, Args, #kb_request{context=Context, static=Static}) ->
+	Options = [
+			{resource, Dict},
+			{context, Context}
+			],
 	execute_dtl(Dtl, Args, Options). 
 
 %% ====================================================================

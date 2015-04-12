@@ -27,19 +27,20 @@ init(_Transport, Data, Opts) ->
 	CallbackList = proplists:get_value(callback_list, Opts),
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
-	{ok, Data, {ResourceServer, SessionManager, CallbackList, list_to_binary(Context)}}.
+	Static = proplists:get_value(static, Opts),
+	BaseRequest = #kb_request{context=list_to_binary(Context), 
+							  resource_server=ResourceServer, 
+							  session_manager=SessionManager, 
+							  static=list_to_binary(Static)},
+	{ok, Data, {BaseRequest, CallbackList}}.
 
-handle(Data, {ResourceServer, SessionManager, CallbackList, Context}) ->
+handle(Data, {BaseRequest, CallbackList}) ->
 	{Method, Data1} = cowboy_req:method(Data),
 	{Path, Data2} = cowboy_req:path_info(Data1),
-	Request = #kb_request{context=Context, 
-			resource_server=ResourceServer, 
-			session_manager=SessionManager, 
-			method=Method, 
-			data=Data2},
+	Request = BaseRequest#kb_request{method=Method, data=Data2},
 	Response = handle(CallbackList, Path, Request),
 	Data3 = kb_response:handle(Response),
-	{ok, Data3, {ResourceServer, SessionManager, CallbackList, Context}}.
+	{ok, Data3, {BaseRequest, CallbackList}}.
 
 terminate(_Reason, _Data, _State) ->
 	ok.

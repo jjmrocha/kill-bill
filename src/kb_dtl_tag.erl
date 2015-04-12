@@ -21,7 +21,8 @@
 %% ====================================================================
 -export([
 	message/2,
-	context/2]).
+	context/2,
+	static/2]).
 
 message(Args, Options) ->
 	case lists:keyfind(key, 1, Args) of
@@ -48,6 +49,21 @@ context(Args, Options) ->
 	end,
 	context_out(Context, Args).
 
+static(Args, Options) ->
+	Static = case lists:keyfind(static, 1, Options) of
+		false ->
+			error_logger:error_msg("KB: No static info\n"),
+			<<"/">>;
+		{_, S} -> S
+	end,	
+	File = case lists:keyfind(file, 1, Args) of
+		false ->
+			error_logger:error_msg("KB: No file in static tag\n"),
+			<<"">>;
+		{_, F} -> F
+	end,
+	context([{file, join(Static, File)}], Options).
+
 %% ====================================================================
 %% Internal functions
 %% ====================================================================
@@ -65,7 +81,7 @@ transform_value(Value = <<"key=", Key/binary>>, Dict) ->
 		{ok, NewValue} -> NewValue
 	end;
 transform_value(Value, _Dict) -> Value.
-											
+
 no_value(Key) -> <<"{", Key/binary, "}">>.
 
 context_out(Context, []) -> Context;

@@ -362,12 +362,24 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	TemplateConfig = proplists:get_value(template, WebApp#webapp.config, none),
 	ActionConfig = proplists:get_value(action, WebApp#webapp.config, []),
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
+	Static = get_static(StaticConfig),
+	Options = [
+					{resource_server, ResourceServer},
+					{context, Context},
+					{session_manager, SessionManager},
+			  		{static, Static}
+					],
 	ActionPath = action_path(ActionConfig, [], []),
-	PathsWithTemplate = add_template(TemplateConfig, Context, ResourceServer, SessionManager, []),
-	PathsWithAction = add_action(ActionPath, Context, ResourceServer, SessionManager, PathsWithTemplate),
+	PathsWithTemplate = add_template(TemplateConfig, Context, Options, []),
+	PathsWithAction = add_action(ActionPath, Context, Options, PathsWithTemplate),
 	PathsWithStatic = add_static(StaticConfig, Context, PathsWithAction),
 	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> sort_paths(A, B) end, PathsWithStatic),
 	get_web_app_config(T, lists:append(Sorted, Paths)).
+
+get_static(none) -> none;
+get_static(Config) ->
+	Path = proplists:get_value(path, Config, "/"), 
+	remove_slashs(Path) ++ "/".
 
 action_path([{Filter, SubConfig}|T], Path, Output) when is_atom(Filter) andalso is_list(SubConfig) ->
 	NewOutput = action_path(SubConfig, [Filter|Path], []),
@@ -393,44 +405,30 @@ fix_path(Path) ->
 			{Url, "[...]"}
 	end.
 
-add_template(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
-add_template(TemplateConfig, Context, ResourceServer, SessionManager, Paths) ->
+add_template(none, _Context, _Options, Paths) -> Paths;
+add_template(TemplateConfig, Context, Options, Paths) ->
 	TemplatePrefix = proplists:get_value(prefix, TemplateConfig, "page"),
 	TopPage = proplists:get_value(top_page, TemplateConfig, "index"),
-	NPaths = add_top_page(TopPage, Context, ResourceServer, SessionManager, Paths),
+	NPaths = add_top_page(TopPage, Context, Options, Paths),
 	lists:append([
-			{get_template_match(TemplatePrefix, Context), kb_cowboy_template, [
-					{resource_server, ResourceServer},
-					{context, Context},
-					{session_manager, SessionManager}
-					]}
+			{get_template_match(TemplatePrefix, Context), kb_cowboy_template, Options}
 			], NPaths).
 
-add_top_page(none, _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
-add_top_page(TopPage, Context, ResourceServer, SessionManager, Paths) -> 
+add_top_page(none, _Context, _Options, Paths) -> Paths;
+add_top_page(TopPage, Context, Options, Paths) -> 
 	lists:append([
-			{Context, kb_cowboy_toppage, [
-					{resource_server, ResourceServer}, 
-					{top_page, TopPage},
-					{context, Context},
-					{session_manager, SessionManager}
-					]}
+			{Context, kb_cowboy_toppage, [{top_page, TopPage}] ++ Options}
 			], Paths).	
 
 get_template_match(TemplatePrefix, Context) ->
 	Context ++ remove_slashs(TemplatePrefix) ++ "/[...]".
 
-add_action([], _Context, _ResourceServer, _SessionManager, Paths) -> Paths;
-add_action([{ActionPrefix, CallbackList}|T], Context, ResourceServer, SessionManager, Paths) ->
+add_action([], _Context, _Options, Paths) -> Paths;
+add_action([{ActionPrefix, CallbackList}|T], Context, Options, Paths) ->
 	NPaths = lists:append([
-				{get_action_match(ActionPrefix, Context), kb_cowboy_action, [
-						{resource_server, ResourceServer}, 
-						{callback_list, CallbackList},
-						{context, Context},
-						{session_manager, SessionManager}
-						]}
+				{get_action_match(ActionPrefix, Context), kb_cowboy_action, [{callback_list, CallbackList}] ++ Options}
 				], Paths),
-	add_action(T, Context, ResourceServer, SessionManager, NPaths).
+	add_action(T, Context, Options, NPaths).
 
 get_action_match(ActionPrefix, Context) ->
 	Context ++ remove_slashs(ActionPrefix) ++ "/[...]".

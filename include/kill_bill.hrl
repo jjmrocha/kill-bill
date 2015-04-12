@@ -21,6 +21,7 @@
 
 -record(kb_request, {
 				context,
+				static,
 				resource_server,
 				session_manager,
 				session_key=none,

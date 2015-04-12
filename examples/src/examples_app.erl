@@ -15,7 +15,7 @@ start(_Type, _Args) ->
 				]},
 	{ok, ServerID} = kill_bill:config_server(ServerConfig),
 	
-	AppName = application:get_application(),
+	{ok, AppName} = application:get_application(),
 	
 	RootWebApp = {webapp_config, root, [
 				{context, "/"},
