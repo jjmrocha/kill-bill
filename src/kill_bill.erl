@@ -364,11 +364,11 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	StaticConfig = proplists:get_value(static, WebApp#webapp.config, none),
 	Static = get_static(StaticConfig),
 	Options = [
-					{resource_server, ResourceServer},
-					{context, Context},
-					{session_manager, SessionManager},
-			  		{static, Static}
-					],
+			{resource_server, ResourceServer},
+			{context, Context},
+			{session_manager, SessionManager},
+			{static, Static}
+			],
 	ActionPath = action_path(ActionConfig, [], []),
 	PathsWithTemplate = add_template(TemplateConfig, Context, Options, []),
 	PathsWithAction = add_action(ActionPath, Context, Options, PathsWithTemplate),
@@ -376,7 +376,7 @@ get_web_app_config([{_WebAppName, Context, WebApp} | T], Paths) ->
 	Sorted = lists:sort(fun({A, _, _}, {B, _, _}) -> sort_paths(A, B) end, PathsWithStatic),
 	get_web_app_config(T, lists:append(Sorted, Paths)).
 
-get_static(none) -> none;
+get_static(none) -> "";
 get_static(Config) ->
 	Path = proplists:get_value(path, Config, "/"), 
 	remove_slashs(Path) ++ "/".
