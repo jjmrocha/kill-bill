@@ -31,7 +31,8 @@ execute(Dtl, none, Args, Req) -> execute(Dtl, Args, Req);
 execute(Dtl, Dict, Args, #kb_request{context=Context, static=Static}) ->
 	Options = [
 			{resource, Dict},
-			{context, Context}
+			{context, Context},
+			{static, Static}
 			],
 	execute_dtl(Dtl, Args, Options). 
 
