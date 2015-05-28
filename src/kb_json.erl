@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013 Joaquim Rocha
+%% Copyright 2013-15 Joaquim Rocha
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -16,28 +16,25 @@
 
 -module(kb_json).
 
--define(JSX_CLEAN_OBJECT, [{}]).
-
 %% ====================================================================
 %% API functions
 %% ====================================================================
--export([decode/1, encode/1, new/0, from_proplist/1]).
-
-new() -> ?JSX_CLEAN_OBJECT.
-
-from_proplist([]) -> ?JSX_CLEAN_OBJECT;
-from_proplist(Props) -> Props.
+-export([decode/1, encode/1]).
 
 encode(Value) ->
-	jsx:encode(Value).
+	case jsondoc:is_jsondoc(Value) of
+		true -> jsondoc:encode(Value);
+		false ->
+			case jsondoc:is_proplist(Value) of
+				true ->
+					JSonDoc = jsondoc:from_proplist(Value),
+					jsondoc:encode(JSonDoc);
+				false -> jsondoc:encode(Value)
+			end
+	end.
 
-decode(Value) when is_binary(Value) ->
-	case jsx:decode(Value) of
-		?JSX_CLEAN_OBJECT -> [];
-		Doc -> Doc
-	end;		
-decode(Value) when is_list(Value) ->
-	decode(list_to_binary(Value)).
+decode(Value) ->
+	jsondoc:decode(Value).
 
 %% ====================================================================
 %% Internal functions

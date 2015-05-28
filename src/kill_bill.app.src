@@ -29,7 +29,7 @@
 		stdlib,
 		cowboy,
 		gibreel,
-		jsx,
+		jsondoc,
 		erlydtl
 	]},
 	{mod, {kill_bill_app, []}}
