@@ -22,16 +22,7 @@
 -export([decode/1, encode/1]).
 
 encode(Value) ->
-	case jsondoc:is_jsondoc(Value) of
-		true -> jsondoc:encode(Value);
-		false ->
-			case jsondoc:is_proplist(Value) of
-				true ->
-					JSonDoc = jsondoc:from_proplist(Value),
-					jsondoc:encode(JSonDoc);
-				false -> jsondoc:encode(Value)
-			end
-	end.
+	jsondoc:encode(Value).
 
 decode(Value) ->
 	jsondoc:decode(Value).
