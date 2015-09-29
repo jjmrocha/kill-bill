@@ -15,7 +15,7 @@
 %%
 
 {application, kill_bill, [
-	{description, "Kill Bill - Web Application Server"},
+	{description, "Web Application Server"},
 	{vsn, "1.0.1"},
 	{modules, [	
 	]},

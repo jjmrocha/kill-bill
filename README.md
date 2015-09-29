@@ -8,8 +8,7 @@ Installation
 
 Using rebar:
 
-```
-#!erlang
+```erlang
 {deps, [
 	{kill_bill, ".*", {hg, "https://bitbucket.org/jjmrocha/kill-bill", "1.0.0"}}
 ]}.
@@ -21,8 +20,7 @@ Start Kill-Bill
 
 Kill-Bill depends on cowboy, jsondoc, erlydtl and gibreel, you need to start cowboy and gibreel before kill-bill.
 
-```
-#!erlang
+```erlang
 %% Start cowboy
 ok = application:start(crypto),
 ok = application:start(ranch),
@@ -42,8 +40,7 @@ Server Management
 
 ### API
 
-```
-#!erlang
+```erlang
 %% Setup a server
 kill_bill:config_server(ServerConfig :: Config) -> {ok, ServerName :: atom()} | {error, Reason :: any()} 
 	when Config :: ConfigFile :: string()
@@ -61,8 +58,7 @@ kill_bill:get_server_list() -> list().
 
 ### Server configuration file
 
-```
-#!erlang
+```erlang
 {server_config, ServerName, [
 	{host, Host}, 
 	{protocol, Protocol}, 
@@ -85,8 +81,7 @@ Where:
 
 Example:
 Accept connections on port 8080 for all hosts.
-```
-#!erlang
+```erlang
 {server_config, my_server, []}.
 ```
 
@@ -96,8 +91,7 @@ Web Application Management
 
 ### API
 
-```
-#!erlang
+```erlang
 %% Deploy a WebApp
 kill_bill:deploy(ServerName :: atom(), WebAppConfig :: Config) -> ok | {error, Reason :: any()} 
 	when Config :: WebAppFile :: string()
@@ -113,8 +107,7 @@ kill_bill:get_webapp_list() -> WebAppList
 
 ### WebApp configuration file
 
-```
-#!erlang
+```erlang
 {webapp_config, WebAppName, [
 	{context, Context},
 	{template, TemplateConfig},
@@ -147,8 +140,7 @@ Where:
 ### Example
 
 The following code was removed from the example project, that you will find on the "examples" directory.
-```
-#!erlang
+```erlang
 {ok, ServerID} = kill_bill:config_server("./priv/default-server.config"),
 ok = kill_bill:deploy(ServerID, "./priv/root-webapp.config"),
 ok = kill_bill:deploy(ServerID, "./priv/examples-webapp.config"),
@@ -161,8 +153,7 @@ kb_action_handler callback
 
 The actions must implement the ```kb_action_handler``` callback behaviour.
 
-```
-#!erlang
+```erlang
 handle(Method :: binary(), Path :: list(), Request :: #kb_request{}) 
 	-> {html, Value :: iodata(), Request1 :: #kb_request{}} 
 	 | {json, Value :: any(), Request1 :: #kb_request{}}
@@ -180,8 +171,7 @@ Parameters:
 ### Example
 
 WebApp configuration file:
-```
-#!erlang
+```erlang
 {webapp_config, examples, [
 	{context, "/examples/"},
 	{action, [ 
@@ -191,8 +181,7 @@ WebApp configuration file:
 ```
 
 Action module:
-```
-#!erlang
+```erlang
 -module(examples_action).
 
 -behaviour(kb_action_handler).
@@ -226,8 +215,7 @@ The module ```kb_action_helper``` provides functions to interact with Kill-Bill.
 
 ### API
 
-```
-#!erlang
+```erlang
 %% Retrive WebApp context
 kb_action_helper:get_context(Req :: #kb_request{}) -> binary().
 
@@ -283,7 +271,6 @@ Retrieves the localized message for "key" from the messages file (defined in the
 
 To use Kill-Bill's tags, add the following to your project's rebar.config:
 
-```
-#!erlang
+```erlang
 {erlydtl_opts, [{custom_tags_modules, [kb_dtl_tag]}]}.
 ```
