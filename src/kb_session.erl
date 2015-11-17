@@ -37,7 +37,7 @@
 create_session_id() ->
 	%% Code provided by Andrey Sergienko 
 	%% http://www.asergienko.com/erlang-how-to-create-uuid-or-session-id/
-	Now = {_, _, Micro} = erlang:now(),
+	Now = {_, _, Micro} = os:timestamp(),
 	Nowish = calendar:now_to_universal_time(Now),
 	Nowsecs = calendar:datetime_to_gregorian_seconds(Nowish),
 	Then = calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
