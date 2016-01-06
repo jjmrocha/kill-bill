@@ -28,6 +28,7 @@
 %% ====================================================================
 -export([
 	get_context/1,
+	get_action_prefix/1,
 	get_headers/1,
 	get_content_type/1,
 	get_accept_header/1,
@@ -51,6 +52,10 @@
 -spec get_context(Req :: #kb_request{}) -> binary().
 get_context(Req) ->
 	Req#kb_request.context.
+
+-spec get_action_prefix(Req :: #kb_request{}) -> binary().
+get_action_prefix(Req) ->
+	Req#kb_request.action_prefix.
 
 -spec get_headers(Req :: #kb_request{}) -> {Headers, #kb_request{}}
 	when Headers :: [{binary(), binary()}, ...].

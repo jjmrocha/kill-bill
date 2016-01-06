@@ -28,10 +28,12 @@ init(_Transport, Data, Opts) ->
 	Context = proplists:get_value(context, Opts),
 	SessionManager = proplists:get_value(session_manager, Opts),
 	Static = proplists:get_value(static, Opts),
+	ActionPrefix = proplists:get_value(action_prefix, Opts),
 	BaseRequest = #kb_request{context=list_to_binary(Context), 
 							  resource_server=ResourceServer, 
 							  session_manager=SessionManager, 
-							  static=list_to_binary(Static)},
+							  static=list_to_binary(Static),
+							  action_prefix=list_to_binary(ActionPrefix)},
 	{ok, Data, {BaseRequest, CallbackList}}.
 
 handle(Data, {BaseRequest, CallbackList}) ->

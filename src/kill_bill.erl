@@ -346,12 +346,6 @@ get_app_list([WebAppName|T], Webapps, AppList) ->
 	Context = get_context(proplists:get_value(context, WebApp#webapp.config, "/")),
 	get_app_list(T, Webapps, [{WebAppName, Context, WebApp} | AppList]).
 
-get_context(Context) ->
-	case remove_slashs(Context) of
-		[] -> "/";
-		Clean -> "/" ++ Clean ++ "/"
-	end.	
-
 remove_slashs(Path) ->
 	kb_util:remove_if_ends_with(kb_util:remove_if_starts_with(Path, "/"), "/").
 
@@ -425,13 +419,14 @@ get_template_match(TemplatePrefix, Context) ->
 
 add_action([], _Context, _Options, Paths) -> Paths;
 add_action([{ActionPrefix, CallbackList}|T], Context, Options, Paths) ->
+	NakedActionPrefix = remove_slashs(ActionPrefix),
 	NPaths = lists:append([
-				{get_action_match(ActionPrefix, Context), kb_cowboy_action, [{callback_list, CallbackList}] ++ Options}
+				{get_action_match(NakedActionPrefix, Context), kb_cowboy_action, [{callback_list, CallbackList}, {action_prefix, NakedActionPrefix}] ++ Options}
 				], Paths),
 	add_action(T, Context, Options, NPaths).
 
 get_action_match(ActionPrefix, Context) ->
-	Context ++ remove_slashs(ActionPrefix) ++ "/[...]".
+	Context ++ ActionPrefix ++ "/[...]".
 
 add_static(none, _Context, Paths) -> Paths;
 add_static(StaticConfig, Context, Paths) ->
@@ -452,3 +447,7 @@ get_static_match(Path, Context) ->
 		"/" -> string:concat(Context, "[...]");
 		_ -> Context ++ remove_slashs(Path) ++ "/[...]"
 	end.
+
+get_context("/") -> "/";
+get_context(WebContext) -> 
+	"/" ++ remove_slashs(WebContext) ++ "/".
