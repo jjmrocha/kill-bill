@@ -7,6 +7,8 @@ start() ->
 	ok = application:start(syntax_tools),
 	ok = application:start(compiler),
 	ok = application:start(ranch),
+	ok = application:start(worker_pool),
+	ok = application:start(async),	
 	ok = application:start(columbo),
 	ok = application:start(cclock),
 	ok = application:start(gibreel),
