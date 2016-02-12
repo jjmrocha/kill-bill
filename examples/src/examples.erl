@@ -16,6 +16,7 @@ start() ->
 	ok = application:start(cowboy),
 	ok = application:start(jsondoc),
 	ok = application:start(erlydtl),
+	ok = application:start(narciso),
 	ok = application:start(kill_bill),
 	ok = application:start(examples).
 

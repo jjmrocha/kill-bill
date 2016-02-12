@@ -35,14 +35,7 @@
 
 -spec create_session_id() -> binary().
 create_session_id() ->
-	%% Code provided by Andrey Sergienko 
-	%% http://www.asergienko.com/erlang-how-to-create-uuid-or-session-id/
-	Now = {_, _, Micro} = os:timestamp(),
-	Nowish = calendar:now_to_universal_time(Now),
-	Nowsecs = calendar:datetime_to_gregorian_seconds(Nowish),
-	Then = calendar:datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}}),
-	Prefix = io_lib:format("~14.16.0b", [(Nowsecs - Then) * 1000000 + Micro]),
-	list_to_binary(Prefix ++ kb_util:to_hex(crypto:rand_bytes(9))).
+	narciso:uuid().
 
 -spec get_session_id(Data :: cowboy_req:req()) -> 
 	{no_session, cowboy_req:req()} | {binary(), cowboy_req:req()}.
