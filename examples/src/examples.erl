@@ -7,16 +7,10 @@ start() ->
 	ok = application:start(syntax_tools),
 	ok = application:start(compiler),
 	ok = application:start(ranch),
-	ok = application:start(worker_pool),
-	ok = application:start(async),	
-	ok = application:start(columbo),
-	ok = application:start(cclock),
-	ok = application:start(gibreel),
 	ok = application:start(cowlib),
 	ok = application:start(cowboy),
-	ok = application:start(jsondoc),
 	ok = application:start(erlydtl),
-	ok = application:start(narciso),
+	ok = base_deps:boot_apps(),
 	ok = application:start(kill_bill),
 	ok = application:start(examples).
 

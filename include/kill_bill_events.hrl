@@ -1,5 +1,5 @@
 %%
-%% Copyright 2013-16 Joaquim Rocha
+%% Copyright 2016 Joaquim Rocha <jrocha@gmailbox.org>
 %% 
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -14,25 +14,11 @@
 %% limitations under the License.
 %%
 
-{application, kill_bill, [
-	{description, "Web Application Server"},
-	{vsn, "1.0.1"},
-	{modules, [	
-	]},
-	{registered, [ 
-		kill_bill, 
-		kb_webapp_sup, 
-		kb_template_sup
-	]},
-	{applications, [
-		kernel, 
-		stdlib,
-		cowboy,
-		gibreel,
-		jsondoc,
-		event_broker,
-		narciso,
-		erlydtl
-	]},
-	{mod, {kill_bill_app, []}}
-]}.
+-define(KB_APP_DEPLOYED_EVENT, <<"kill_bill:app_deployed">>).
+-define(KB_APP_UNDEPLOYED_EVENT, <<"kill_bill:add_undeployed">>).
+-define(KB_SERVER_STARTED_EVENT, <<"kill_bill:server_started">>).
+-define(KB_SERVER_STOPPED_EVENT, <<"kill_bill:server_stopped">>).
+
+-define(KB_EVENT_SERVER_PROP, server).
+
+-define(KB_APP_EVENT_INFO(Server), [{?KB_EVENT_SERVER_PROP, Server}]).

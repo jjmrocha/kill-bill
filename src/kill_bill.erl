@@ -16,6 +16,8 @@
 
 -module(kill_bill).
 
+-include("kill_bill_events.hrl").
+
 -behaviour(gen_server).
 
 -define(PROTOCOL_HTTP, http).
@@ -144,6 +146,7 @@ handle_call({start_server, ServerName}, _From, State=#status{servers=Servers, we
 			
 			NServers = dict:store(ServerName, Server#server{running=true}, Servers),
 			NState = State#status{servers=NServers},
+			event_broker:publish(?KB_SERVER_STARTED_EVENT, ServerName),
 			ok
 	end,
 	{reply, Reply, NState};
@@ -163,6 +166,7 @@ handle_call({stop_server, ServerName}, _From, State=#status{servers=Servers}) ->
 			
 			NServers = dict:store(ServerName, Server#server{running=false}, Servers),
 			NState = State#status{servers=NServers},
+			event_broker:publish(?KB_SERVER_STOPPED_EVENT, ServerName),
 			ok
 	end,
 	{reply, Reply, NState};
@@ -204,6 +208,7 @@ handle_call({deploy, ServerName, {WebAppName, Config}}, _From, State=#status{ser
 					
 					error_logger:info_msg("WebApp ~p deployed on server ~p, with Config: ~p\n", [WebAppName, ServerName, Config]),
 					NState = State#status{servers=NServers, webapps=NWebapps},
+					event_broker:publish(?KB_APP_DEPLOYED_EVENT, WebAppName, ?KB_APP_EVENT_INFO(ServerName)),
 					ok
 			end;
 		{ok, _App} ->
@@ -239,6 +244,7 @@ handle_call({undeploy, WebAppName}, _From, State=#status{servers=Servers, webapp
 			
 			error_logger:info_msg("WebApp ~p was undeployed from server ~p\n", [WebAppName, WebApp#webapp.server]),
 			NState = State#status{servers=NServers, webapps=NWebapps},
+			event_broker:publish(?KB_APP_UNDEPLOYED_EVENT, WebAppName, ?KB_APP_EVENT_INFO(WebApp#webapp.server)),
 			ok
 	end,
 	{reply, Reply, NState};
