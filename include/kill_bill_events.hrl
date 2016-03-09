@@ -21,4 +21,4 @@
 
 -define(KB_EVENT_SERVER_PROP, server).
 
--define(KB_APP_EVENT_INFO(Server), [{?KB_EVENT_SERVER_PROP, Server}]).
+-define(KB_APP_EVENT_INFO(Server), #{?KB_EVENT_SERVER_PROP => Server}).
