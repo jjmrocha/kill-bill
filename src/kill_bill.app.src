@@ -30,7 +30,6 @@
 		cowboy,
 		gibreel,
 		jsondoc,
-		event_broker,
 		narciso,
 		erlydtl
 	]},
